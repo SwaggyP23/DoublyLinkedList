@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _DOUBLYLINKED_
+#define _DOUBLYLINKED_
+
 #include <iostream>
 #include <memory>
 #include <concepts>
@@ -317,3 +320,5 @@ namespace reda{
         }
     };
 }
+
+#endif

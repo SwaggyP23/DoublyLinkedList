@@ -1,0 +1,7 @@
+bin/
+.vs/
+
+DoublyLinkedVS.sln
+DoublyLinkedVS.vcxproj
+DoublyLinkedVS.vcxproj.filters
+DoublyLinkedVS.vcxproj.user
