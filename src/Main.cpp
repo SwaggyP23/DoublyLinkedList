@@ -4,61 +4,116 @@
 
 struct Point {
 	int x, y;
+
+	Point() : x(0), y(0) {}
+
 	Point(int x, int y) : x(x), y(y) {}
+
+	Point(const Point& other)
+		: x(other.x), y(other.y)
+	{
+		std::cout << "Coppied\n";
+	}
+
+	Point& operator=(const Point& other) // Copy assignment operator
+	{
+		x = other.x;
+		y = other.y;
+		//m_MemoryBlock = new int[5];
+		//memcpy(m_MemoryBlock, other.m_MemoryBlock, 5 * sizeof(int));
+
+		std::cout << "Coppied\n";
+		return *this;
+	}
+
+	Point(Point&& other) noexcept
+		: x(other.x), y(other.y)
+	{
+		std::cout << "Moved\n";
+		other.x = 0;
+		other.y = 0;
+	}
+
+	Point& operator=(Point&& other) noexcept { // Move assignment operator
+
+		//m_MemoryBlock = other.m_MemoryBlock;
+		//other.m_MemoryBlock = nullptr;
+		x = other.x;
+		y = other.y;
+
+		other.x = 0;
+		other.y = 0;
+
+		std::cout << "Moved\n";
+		return *this;
+	}
+
 	~Point() {
 		std::cout << "Point being Destroyed at: " << this << std::endl;
 	}
+
+	friend std::ostream& operator<<(std::ostream& stream, const Point& pnt);
+
+	bool operator==(const Point& right)
+	{
+		return x == right.x && y == right.y;
+	}
+
 };
 
-void display(reda::LinkedList<Point*>& val) {
-	for (int i = 0; i < val.size(); i++) {
-		std::cout << "index: " << i << " X val : " << val[i]->x << " ";
-		std::cout << "Y val: " << val[i]->y << "\n";
-	}
+std::ostream& operator<<(std::ostream& stream, const Point& pnt)
+{
+	stream << "X: " << pnt.x << ", Y: " << pnt.y;
+	return stream;
 }
+
+//template<typename Type>
+//void display(const reda::LinkedList<Type>& list)
+//{
+//	for (int i = 0; i < list.size(); i++)
+//		std::cout << list[i] << std::endl;
+//}
 
 int main()
 {
-	Point* A = new Point(5, 5);
-	Point* B = new Point(6, 6);
-	Point* C = new Point(7, 7);
-	reda::LinkedList<Point*> temp("Reda");
-	std::cout << std::boolalpha;
-	std::cout << "Is list empty: " << temp.isEmpty() << std::endl;
-	temp.push_back(A);
-	temp.push_back(B);
-	temp.push_back(C);
+	{
+		reda::LinkedList<Point> temp("Reda");
+		Point pnt1(1, 2);
+		Point pnt2(3, 4);
+		Point pnt3(5, 6);
+		Point pnt4(7, 8);
+		//temp.push_back({ 5, 5 });
+		//temp.push_back({ 6, 8 });
+		//temp.push_back({ 4, 2 });
+		temp.push_back(pnt1);
+		temp.push_back(pnt2);
+		temp.push_back(pnt3);
+		//temp.emplace_back(1, 2);
+		//temp.emplace_back(3, 4);
+		//temp.emplace_back(5, 6);
+		std::cout << temp.getAt(pnt2) << std::endl;
+		std::cout << temp.getAt(pnt3) << std::endl;
+		temp.push_front((Point&&)pnt4);
+		//std::cout << temp.getAt(pnt4) << std::endl;
+	}
 
-	std::cout << "X at the back: " << temp.back()->x << std::endl;
-	std::cout << "Y at the back: " << temp.back()->y << std::endl;
-	std::cout << "X at the front: " << temp.front()->x << std::endl;
-	std::cout << "Y at the front: " << temp.front()->y << std::endl;
+	{
+		reda::LinkedList<Point> temp("Reda");
+		Point pnt1(1, 2);
+		Point pnt2(3, 4);
+		Point pnt3(5, 6);
+		//temp.push_back({ 5, 5 });
+		//temp.push_back({ 6, 8 });
+		//temp.push_back({ 4, 2 });
+		temp.push_back((Point&&)pnt1);
+		temp.push_back((Point&&)pnt2);
+		temp.push_back((Point&&)pnt3); // These 3 are equivalent to the 3 above them in that they are both moved values
+	}
 
-	temp.reverseList();
-	std::cout << "List after reversing: \n";
-	display(temp);
-
-	std::cout << "X at the back: " << temp.back()->x << std::endl;
-	std::cout << "Y at the back: " << temp.back()->y << std::endl;
-	std::cout << "X at the front: " << temp.front()->x << std::endl;
-	std::cout << "Y at the front: " << temp.front()->y << std::endl;
-
-	temp.remove(B);
-	delete B;
-
-	display(temp);
-
-	std::cout << std::boolalpha;
-	std::cout << "Is list empty: " << temp.isEmpty() << std::endl;
-
-	Point* D = new Point(156, 12);
-	temp.insert(D, 1);
-
-	display(temp);
-
-	std::cout << "Wassup Mate\n";
-
-	std::cin.get();
-	delete A;
-	delete C;
+	{
+		reda::LinkedList<int> temp("Reda");
+		temp.push_back(5);
+		temp.push_back(6);
+		temp.push_back(7);
+	}
 }
