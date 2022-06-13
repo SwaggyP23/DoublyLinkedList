@@ -4,16 +4,17 @@
 
 struct Point {
 	int x, y;
+	std::string m_Name;
 	int* m_memoryBlock = nullptr;
 
-	Point() : x(0), y(0) 
+	Point() : x(0), y(0), m_Name("NO_NAME")
 	{
 		m_memoryBlock = new int[5];
 		for (int i = 0; i < 5; i++)
 			m_memoryBlock[i] = 0;
 	}
 
-	Point(int x, int y) : x(x), y(y) 
+	Point(const std::string& name, int x, int y) : x(x), y(y), m_Name(name)
 	{
 		m_memoryBlock = new int[5];
 		for (int i = 0; i < 5; i++)
@@ -21,7 +22,7 @@ struct Point {
 	}
 
 	Point(const Point& other)
-		: x(other.x), y(other.y)
+		: x(other.x), y(other.y), m_Name(other.m_Name)
 	{
 		m_memoryBlock = new int[5];
 		memcpy(m_memoryBlock, other.m_memoryBlock, 5 * sizeof(int));
@@ -33,6 +34,7 @@ struct Point {
 	{
 		x = other.x;
 		y = other.y;
+		m_Name = other.m_Name;
 		m_memoryBlock = new int[5];
 		memcpy(m_memoryBlock, other.m_memoryBlock, 5 * sizeof(int));
 
@@ -41,7 +43,7 @@ struct Point {
 	}
 
 	Point(Point&& other) noexcept
-		: x(other.x), y(other.y)
+		: x(other.x), y(other.y), m_Name(other.m_Name)
 	{
 		std::cout << "Moved\n";
 		other.x = 0;
@@ -54,6 +56,7 @@ struct Point {
 	{
 		x = other.x;
 		y = other.y;
+		m_Name = other.m_Name;
 		m_memoryBlock = other.m_memoryBlock;
 
 		other.x = 0;
@@ -65,7 +68,7 @@ struct Point {
 	}
 
 	~Point() {
-		std::cout << "Point being Destroyed at: " << this << std::endl;
+		std::cout << "Point being Destroyed at: " << m_Name << std::endl;
 		delete[] m_memoryBlock;
 	}
 
@@ -97,24 +100,33 @@ int main()
 {
 	{
 		reda::LinkedList<Point> temp("Reda");
-		Point pnt1(1, 2);
-		Point pnt2(3, 4);
-		Point pnt3(5, 6);
-		Point pnt4(7, 8);
+		Point pnt1("one", 1, 2);
+		Point pnt2("two", 3, 4);
+		Point pnt3("three", 5, 6);
+		Point pnt4("four", 7, 8);
 		//temp.push_back({ 5, 5 });
 		//temp.push_back({ 6, 8 });
 		//temp.push_back({ 4, 2 });
 		temp.push_back(pnt1);
 		temp.push_back(pnt2);
 		temp.push_back(pnt3);
-		//temp.emplace_back(1, 2);
-		//temp.emplace_back(3, 4);
+		//temp.emplace_back("emplaced 1", 9, 9);
+		//temp.emplace_back("emplaced 2", 8, 8);
 		//temp.emplace_back(5, 6);
 		display(temp);
-		temp.insert({ 15, 15 }, 2);
+		temp.insert({ "Temporary node", 15, 15}, 2);
 		display(temp);
+		std::cout << "Emplacing front" << std::endl;
+		temp.emplace_front("Emplaced Front", 20, 20);
+		display(temp);
+		std::cout << "Reversing List" << std::endl;
 		temp.reverseList();
 		display(temp);
+		std::cout << "Swapping kth nodes" << std::endl;
+		temp.swapKthNodes(2);
+		display(temp);
+		std::cout << "Clearing and popping" << std::endl;
+		temp.pop_back();
 		temp.clear();
 		display(temp);
 	}

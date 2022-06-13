@@ -6,11 +6,12 @@
  * node is popped from the queue and is connected to the node, when the queue is empty is reallocates another amount of nodes
  * and stores it.
  * 
- * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue.
- * Create emplace front function, emplace (in middle) function. Create iterator.
+ * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
+ * Create emplace front function, emplace (in middle) function. Create iterators.
  * Make overloads for the erase and insert function that use iterators instead of temporary indexing.
- * Make comments look better by using comment highlighting.
+ * Make overload for the swap function that can swap any two specified nodes in the list, preferanly specified using Iterator.
  * Make it so that it is allowed to popBack or front when m_Size == 1 and getting an empty list.
+ * Make comments look better by using comment highlighting.
  */
 
 #include <iostream>
@@ -18,6 +19,7 @@
 
 #ifdef DEBUG
 
+#define USE_Q 1
 #define ASSERT(x) { if(!(x)) { std::cout << "Cannot " __FUNCTION__ << std::endl; __debugbreak(); } }
 
 #else
@@ -44,28 +46,14 @@ namespace reda{
 
         ~Node() {
             std::cout << "Node being destroyed!" << std::endl;
+            //::operator delete(&val);
+            //next = nullptr;
+            //prev = nullptr;
         }
     };
 
     template<typename T>
     class LinkedList{
-    private:
-        using nodePtr = Node<T>*;
-
-        std::string m_Name;
-
-        nodePtr m_Head;
-        nodePtr m_Curr;
-        nodePtr m_Tail;
-
-        size_t m_Size;
-
-        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one function call that allocates 
-                                              // a certain number of nodes and adds to the queue, then we can pop from the 
-                                              // queue and use the nodes to link to the list.
-
-        bool m_FirstElement;
-
     public:
         LinkedList()
             : m_Name("List"), m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
@@ -105,9 +93,12 @@ namespace reda{
         {
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
-
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)&newNode->val) T(val); // Copies the value
 
             if (m_FirstElement) {
@@ -132,8 +123,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)&newNode->val)  T(std::move(val)); // Moves the value
 
             if (m_FirstElement) {
@@ -160,8 +155,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
 
             new((void*)&newNode->val) T(std::forward<Args>(args)...);
 
@@ -181,6 +180,74 @@ namespace reda{
             return;
         }
 
+        // Adds a new node to the beginning of the list, however it creates the value object in place of its memory directly 
+        // and no moving or copying is needed.
+        template<typename... Args>
+        void emplace_front(Args&&... args)
+        {
+            if (m_AvailableNodes.size() == 0)
+                AllocateNodes(5);
+
+#if USE_Q
+            nodePtr newNode = m_AvailableNodes.front();
+            m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
+
+            new((void*)&newNode->val) T(std::forward<Args>(args)...);
+
+            if (m_FirstElement) {
+                m_Head = newNode;
+                m_Tail = newNode;
+                m_Size++;
+                m_FirstElement = false;
+                return;
+            }
+
+            m_Head->prev = newNode;
+            newNode->next = m_Head;
+
+            m_Head = m_Head->prev;
+            m_Size++;
+            return;
+        }
+
+        // Need to make it find the position that is specified and then insert in.
+
+        // Adds a new node to the specified position in the list, however it creates the value object in place of its memory 
+        // directly and no moving or copying is needed.
+        //template<typename... Args>
+        //void emplace(Args&&... args)
+        //{
+        //    if (m_AvailableNodes.size() == 0)
+        //        AllocateNodes(5);
+
+        //    #if USE_Q
+        //    nodePtr newNode = m_AvailableNodes.front();
+        //    m_AvailableNodes.pop_front();
+        //    #else
+        //    nodePtr newNode = new Node<T>();
+        //    #endif
+
+        //    new((void*)&newNode->val) T(std::forward<Args>(args)...);
+
+        //    if (m_FirstElement) {
+        //        m_Head = newNode;
+        //        m_Tail = newNode;
+        //        m_Size++;
+        //        m_FirstElement = false;
+        //        return;
+        //    }
+
+        //    m_Head->prev = newNode;
+        //    newNode->next = m_Head;
+
+        //    m_Head = m_Head->prev;
+        //    m_Size++;
+        //    return;
+        //}
+
     // Append lvalue new node to the beginning of the list.
         void push_front(const T& val)
         {
@@ -189,8 +256,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
             
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)& newNode->val) T(val); // Copies the value
 
             m_Head->prev = newNode;
@@ -207,8 +278,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)&newNode->val)  T(std::move(val)); // Moves the value
 
             m_Head->prev = newNode;
@@ -231,8 +306,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)&newNode->val) T(val); // Copies the value
 
             newNode->prev = m_Curr->prev;
@@ -256,8 +335,12 @@ namespace reda{
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
+#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
             new((void*)&newNode->val) T(std::move(val)); // Moves the value
 
             newNode->prev = m_Curr->prev;
@@ -278,8 +361,6 @@ namespace reda{
                 m_Tail->next->next = nullptr;
                 m_Tail->next->prev = nullptr;
 
-                m_AvailableNodes.push_back(m_Tail->next);
-
                 m_Tail->next = nullptr;
 
                 m_Size--;
@@ -298,8 +379,6 @@ namespace reda{
                 m_Head->prev->val.~T();
                 m_Head->prev->next = nullptr;
                 m_Head->prev->prev = nullptr;
-
-                m_AvailableNodes.push_back(m_Head->prev);
 
                 m_Head->prev = nullptr;
 
@@ -337,8 +416,6 @@ namespace reda{
             m_Curr->next = nullptr;
             m_Curr->prev = nullptr;
 
-            m_AvailableNodes.push_back(m_Curr);
-
             m_Size--;
         }
 
@@ -347,17 +424,17 @@ namespace reda{
         {
             m_Curr = m_Head;
 
-            while(m_Curr)
+            for (size_t i = 0; i < m_Size; i++)
             {
                 nodePtr temp = m_Curr->next;
-
                 m_Curr->val.~T();
                 m_Curr->next = nullptr;
                 m_Curr->prev = nullptr;
-
-                m_AvailableNodes.push_back(m_Curr);
                 m_Curr = temp;
             }
+
+            m_Head = nullptr;
+            m_Tail = nullptr;
 
             m_Size = 0;
         }
@@ -410,28 +487,48 @@ namespace reda{
             m_Tail = temp;
         }
 
-        #if 0
     // Swaps the Kth largest element with the Kth smallest element in the list.
-        void swapNodes(const int& k)
+        void swapKthNodes(int k)
         {
             if(k == 0) return;
 
-            curr = m_Head;
-            nodePtr left = m_Head, right = m_Head;
-            int count = 1;
+            doubleNodes dn = findKthNodes(k);
 
-            while(curr){
-                if(count < k) left = left->next;
-                else if (count > k) right = right->next;
-                curr = curr->next;
-                count++;
-            }
+            nodePtr Node1 = dn.first;
+            nodePtr Node2 = dn.second;
 
-            T temp = left->val;
-            left->val = right->val;
-            right->val = temp;
+            if (Node1 == m_Head)
+                m_Head = Node2;
+            else if (Node2 == m_Head)
+                m_Head = Node1;
+            if (Node1 == m_Tail)
+                m_Tail = Node2;
+            else if (Node2 == m_Tail)
+                m_Tail = Node1;
+
+            // Swapping Node1 and Node2
+            nodePtr temp;
+            temp = Node1->next;
+            Node1->next = Node2->next;
+            Node2->next = temp;
+
+            if (Node1->next != NULL)
+                Node1->next->prev = Node1;
+            if (Node2->next != NULL)
+                Node2->next->prev = Node2;
+
+            temp = Node1->prev;
+            Node1->prev = Node2->prev;
+            Node2->prev = temp;
+
+            if (Node1->prev != NULL)
+                Node1->prev->next = Node1;
+            if (Node2->prev != NULL)
+                Node2->prev->next = Node2;
+
+            return;
         }
-        #endif
+
     // Returns the val at the specified index in the list.
         T& operator[](unsigned int index)
         {
@@ -471,25 +568,49 @@ namespace reda{
             return m_Tail->val;
         }
 
-    // Returns a pointer pointing to the beginning of the list.
-        inline nodePtr begin() const 
-        {
-            if(m_Head) return m_Head;
-            return nullptr;
-        }
+        //// REFACTOR FOR ITERATORS
+    //// Returns a pointer pointing to the beginning of the list.
+    //    inline nodePtr begin() const 
+    //    {
+    //        if(m_Head) return m_Head;
+    //        return nullptr;
+    //    }
 
-    // Returns a pointer pointing to the end of the list.
-        inline nodePtr end() const 
-        {
-            if(m_Tail) return m_Tail;
-            return nullptr;
-        }
+    //// Returns a pointer pointing to the end of the list.
+    //    inline nodePtr end() const 
+    //    {
+    //        if(m_Tail) return m_Tail;
+    //        return nullptr;
+    //    }
 
     // Destructor
         ~LinkedList()
-         {
+        {
             shutDown();
         }
+
+    private:
+        using nodePtr = Node<T>*;
+    
+        std::string m_Name;
+    
+        nodePtr m_Head;
+        nodePtr m_Curr;
+        nodePtr m_Tail;
+    
+        size_t m_Size;
+    
+        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one     callthatallocate 
+                                              // a certain number of nodes and adds to the queue, then we can pop   th 
+                                              // queue and use the nodes to link to the list.
+    
+        bool m_FirstElement;
+    
+        struct doubleNodes
+        {
+            nodePtr first;
+            nodePtr second;
+        };
 
     private:
     // Allocates a nodeCount number of empty nodes and stores them in a Deque ready for popping and use.
@@ -499,21 +620,39 @@ namespace reda{
                 m_AvailableNodes.push_back(new Node<T>());
         }
 
+    // Helper function for the swapKthNodes function.
+        doubleNodes findKthNodes(int k)
+        {
+            m_Curr = m_Head;
+            nodePtr left = m_Head, right = m_Head;
+            int count = 1;
+
+            while (m_Curr) {
+                if (count < k) left = left->next;
+                else if (count > k) right = right->next;
+
+                m_Curr = m_Curr->next;
+                count++;
+            }
+
+            return { left, right };
+        }
+
     // This functions just like the public clear function however it also deletes the memory of each node after 
     // destructing the T val in it, this is for the destructor only.
         void shutDown()
         {
             m_Curr = m_Head;
 
-            while (m_Curr)
-            {
+            for (size_t i = 0; i < m_Size; i++) {
                 nodePtr temp = m_Curr->next;
-
                 m_Curr->val.~T();
-                ::operator delete(m_Curr);
-
+                m_Curr->next = nullptr;
+                m_Curr->prev = nullptr;
                 m_Curr = temp;
             }
+
+            m_Size = 0;
 
             while (!m_AvailableNodes.empty())
             {
@@ -523,8 +662,6 @@ namespace reda{
                 m_Curr->val.~T();
                 m_AvailableNodes.pop_front();
             }
-
-            m_Size = 0;
         }
     };
 }
