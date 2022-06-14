@@ -79,6 +79,16 @@ struct Point {
 		return x == right.x && y == right.y;
 	}
 
+	bool operator>(const Point& right) const
+	{
+		return x > right.x && y > right.y;
+	}
+
+	bool operator<(const Point& right) const
+	{
+		return x < right.x && y < right.y;
+	}
+
 };
 
 std::ostream& operator<<(std::ostream& stream, const Point& pnt)
@@ -104,63 +114,39 @@ int main()
 		Point pnt2("two", 3, 4);
 		Point pnt3("three", 5, 6);
 		Point pnt4("four", 7, 8);
-		temp.push_back(pnt2);
+		temp.push_back(pnt1);
 		temp.push_back(pnt2);
 		temp.push_back(pnt3);
 		temp.push_back(pnt4);
 		display(temp);
-		temp.emplace(2, "two", 3, 4);
-		temp.insert(4, pnt2);
-		temp.insert(5, pnt2);
+		temp.reverseList();
 		display(temp);
+		std::cout << "Testing swap" << std::endl;
+		temp.swapNodes(0, 3);
+		display(temp);
+		//std::cout << "IT\n";
+		//reda::LinkedList<Point>::Iterator it(temp.begin());
+		//display(temp);
+		//std::cout << *(it += 2) << std::endl;
 		temp.remove(pnt2);
+		temp.pop_front();
 		display(temp);
-		std::cout << "Popping and clearing" << std::endl;
-		//temp.emplace_back("just to delete", 555, 555);
+
+		std::cout << "Testing the iterator" << std::endl;
+		std::cout << "Iterator loop" << std::endl;
+		for (reda::LinkedList<Point>::Iterator it = temp.begin(); it != temp.end(); it++)
+			std::cout << *it << std::endl;
+
+		std::cout << "For each loop" << std::endl;
+		for (auto& it : temp)
+			std::cout << it << std::endl;
+
+		std::cout << "\n\nPopping and clearing" << std::endl;
 		temp.pop_back();
 		temp.pop_front();
 		temp.clear();
 		display(temp);
 	}
-
-	//{
-	//	reda::LinkedList<Point> temp("Reda");
-	//	Point pnt1("one", 1, 2);
-	//	Point pnt2("two", 3, 4);
-	//	Point pnt3("three", 5, 6);
-	//	Point pnt4("four", 7, 8);
-	//	//temp.push_back({ 5, 5 });
-	//	//temp.push_back({ 6, 8 });
-	//	//temp.push_back({ 4, 2 });
-	//	temp.push_back(pnt1);
-	//	temp.push_back(pnt2);
-	//	temp.push_back(pnt3);
-	//	//temp.emplace_back("emplaced 1", 9, 9);
-	//	//temp.emplace_back("emplaced 2", 8, 8);
-	//	//temp.emplace_back(5, 6);
-	//	display(temp);
-	//	temp.insert(2, { "Temporary node", 15, 15 });
-	//	display(temp);
-	//	std::cout << "Emplacing front" << std::endl;
-	//	temp.emplace_front("Emplaced Front", 20, 20);
-	//	display(temp);
-	//	std::cout << "Reversing List" << std::endl;
-	//	temp.reverseList();
-	//	display(temp);
-	//	std::cout << "Emplacing in mid" << std::endl;
-	//	temp.insert(2, pnt1);
-	//	display(temp);
-	//	std::cout << "Testing remove" << std::endl;
-	//	temp.remove(pnt1);
-	//	display(temp);
-	//	std::cout << "Swapping kth nodes" << std::endl;
-	//	temp.swapKthNodes(2);
-	//	display(temp);
-	//	std::cout << "Clearing and popping" << std::endl;
-	//	temp.pop_back();
-	//	temp.clear();
-	//	display(temp);
-	//}
 
 	//{
 	//	reda::LinkedList<int> temp("Reda");

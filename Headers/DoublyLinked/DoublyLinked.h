@@ -7,9 +7,6 @@
  * and stores it.
  * 
  * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
- * Create iterators.
- * Make overloads for the erase and insert function that use iterators instead of temporary indexing.
- * Make overload for the swap function that can swap any two specified nodes in the list, preferanly specified using Iterator.
  * Create Copy and Move constructors and assignment operator for the LinkedList itself so that it is copyable and movable.
  * Make comments look better by using comment highlighting.
  * Fix insert and emplace functions to handle the case of index == 0.
@@ -33,6 +30,141 @@
 
 namespace reda{
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////// ITERATOR
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // The way this iterator works is just like in a vector iterator you do + int to the pointer to change iterator position,
+    // instead since this is a linked list and all the memory is on the heap and not contiguous we need to traverse n times
+    // the next pointers of the nodes until we reach the specified target, if n leads to out of bounds the program will crash
+    // and no asserts have been set up for that
+
+    template<typename LinkedList>
+    class ListIterator
+    {
+    public:
+        using valueType             = LinkedList::valueType;
+        using pointerType           = valueType*;
+        using referenceType         = valueType&;
+        using it_Ptr                = LinkedList::NodePtr;
+
+    public:
+        ListIterator(it_Ptr ptr)
+            : m_Ptr(ptr) {}
+
+        ListIterator& operator++()
+        {
+            m_Ptr = m_Ptr->next;
+            return *this;
+        }
+
+        ListIterator operator++(int)
+        {
+            ListIterator iterator = *this;
+            ++(*this);
+            return iterator;
+        }
+
+        ListIterator& operator--()
+        {
+            m_Ptr = m_Ptr->prev;
+            return *this;
+        }
+
+        ListIterator operator--(int)
+        {
+            ListIterator iterator = *this;
+            --(*this);
+            return iterator;
+        }
+
+        ListIterator operator+(int right)
+        {
+            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
+
+            for (int i = 0; i < right; i++)
+            {
+                ++(*this);
+            }
+
+            return m_Ptr;
+        }
+
+        ListIterator operator-(int right)
+        {
+            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
+
+            for (int i = 0; i < right; i++)
+            {
+                --(*this);
+            }
+
+            return m_Ptr;
+        }
+
+        ListIterator& operator+=(int right)
+        {
+            *this + right;
+
+            return *this;
+        }
+
+        ListIterator& operator-=(int right)
+        {
+            *this - right;
+
+            return *this;
+        }
+
+        bool operator==(const ListIterator& right) const
+        {
+            return m_Ptr == right.m_Ptr;
+        }
+
+        bool operator!=(const ListIterator& right) const
+        {
+            return !(*this == right);
+        }
+
+        bool operator<(const ListIterator& right) const
+        {
+            return m_Ptr < right.m_Ptr;
+        }
+
+        bool operator>(const ListIterator& right) const
+        {
+            m_Ptr > right.m_Ptr;
+        }
+
+        bool operator<=(const ListIterator& right) const
+        {
+            m_Ptr <= right.m_Ptr;
+        }
+
+        bool operator>=(const ListIterator& right) const
+        {
+            m_Ptr >= right.m_Ptr;
+        }
+
+        pointerType operator->()
+        {
+            return m_Ptr; // The pointer here is also the position we are at.
+        }
+
+        referenceType operator*()
+        {
+            return m_Ptr->val;
+        }
+
+    private:
+        it_Ptr m_Ptr;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////// LIST
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     template<typename T>
     struct Node {
         T val;
@@ -47,15 +179,75 @@ namespace reda{
         Node(T&& val) noexcept : val((T&&)val), next(nullptr), prev(nullptr) {}
 
         ~Node() {
+#if DEBUG
             std::cout << "Node being destroyed!" << std::endl;
-            //::operator delete(&val);
-            //next = nullptr;
-            //prev = nullptr;
+#endif
+        }
+
+        bool operator==(const Node& right) const
+        {
+            return val == right.val;
+        }
+
+        bool operator!=(const Node& right) const
+        {
+            return !(*this == right);
+        }
+
+        bool operator<(const Node& right) const
+        {
+            return val < right.val;
+        }
+
+        bool operator>(const Node& right) const
+        {
+            val > right.val;
+        }
+
+        bool operator<=(const Node& right) const
+        {
+            val <= right.val;
+        }
+
+        bool operator>=(const Node& right) const
+        {
+            val >= right.val;
         }
     };
 
     template<typename T>
-    class LinkedList{
+    class LinkedList
+    {
+    private:
+        using nodePtr = Node<T>*;
+
+        std::string m_Name;
+
+        nodePtr m_Head;
+        nodePtr m_Curr;
+        nodePtr m_Tail;
+
+        size_t m_Size;
+
+#if USE_Q
+        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one call that allocates
+                                              // a certain number of nodes and adds them to the queue, then we can pop from
+                                              // the queue and use the popped new nodes in the list
+#endif
+
+        bool m_FirstElement;
+
+        struct doubleNodes
+        {
+            nodePtr first;
+            nodePtr second;
+        };
+
+    public:
+        using valueType = T;
+        using Iterator = ListIterator<LinkedList<T>>;
+        using NodePtr = nodePtr;
+
     public:
         LinkedList()
             : m_Name("List"), m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
@@ -363,6 +555,7 @@ namespace reda{
                     m_Curr = nullptr;
 
                     delete m_Tail;
+                    m_Tail = nullptr;
 
                     m_Size--;
                     return;
@@ -370,9 +563,12 @@ namespace reda{
 
                 m_Tail = m_Tail->prev; // Rechanging the Tail pointer position so that it doesnt get deleted in the hollowing
 
-                m_Tail->next->val.~T();                 // Here we create a hollow object
-                m_Tail->next->next = nullptr;
-                m_Tail->next->prev = nullptr;
+                //m_Tail->next->val.~T();                 // Here we create a hollow object
+                //m_Tail->next->next = nullptr;
+                //m_Tail->next->prev = nullptr;
+                m_Curr = m_Tail->next;
+                delete m_Curr;
+                m_Curr = nullptr;
 
                 m_Tail->next = nullptr;
 
@@ -395,6 +591,7 @@ namespace reda{
                     m_Curr = nullptr;
 
                     delete m_Head;
+                    m_Head = nullptr;
 
                     m_Size--;
                     return;
@@ -402,9 +599,12 @@ namespace reda{
 
                 m_Head = m_Head->next; // Rechanging the Head pointer position so that it doesnt get deleted in the hollowing
                 
-                m_Head->prev->val.~T();
-                m_Head->prev->next = nullptr;
-                m_Head->prev->prev = nullptr;
+                //m_Head->prev->val.~T();
+                //m_Head->prev->next = nullptr;
+                //m_Head->prev->prev = nullptr;
+                m_Curr = m_Head->prev;
+                delete m_Curr;
+                m_Curr = nullptr;
 
                 m_Head->prev = nullptr;
 
@@ -436,9 +636,11 @@ namespace reda{
             m_Curr->prev->next = m_Curr->next;
             m_Curr->next->prev = m_Curr->prev;
 
-            m_Curr->val.~T();
-            m_Curr->next = nullptr;
-            m_Curr->prev = nullptr;
+            //m_Curr->val.~T();
+            //m_Curr->next = nullptr;
+            //m_Curr->prev = nullptr;
+            delete m_Curr;
+            m_Curr = nullptr;
 
             m_Size--;
         }
@@ -459,6 +661,7 @@ namespace reda{
             }
 
             m_Head = nullptr;
+            m_Curr = nullptr;
             m_Tail = nullptr;
 
             m_Size = 0;
@@ -516,6 +719,16 @@ namespace reda{
             m_Head = m_Tail;
             m_Tail = temp;
         }
+        
+        void swapNodes(int index1, int index2)
+        {
+            doubleNodes dn = findNodes(index1, index2);
+
+            nodePtr Node1 = dn.first;
+            nodePtr Node2 = dn.second;
+
+            swappingTheNodes(Node1, Node2);
+        }
 
     // Swaps the Kth largest element with the Kth smallest element in the list.
         void swapKthNodes(int k)
@@ -527,36 +740,7 @@ namespace reda{
             nodePtr Node1 = dn.first;
             nodePtr Node2 = dn.second;
 
-            if (Node1 == m_Head)
-                m_Head = Node2;
-            else if (Node2 == m_Head)
-                m_Head = Node1;
-            if (Node1 == m_Tail)
-                m_Tail = Node2;
-            else if (Node2 == m_Tail)
-                m_Tail = Node1;
-
-            // Swapping Node1 and Node2
-            nodePtr temp;
-            temp = Node1->next;
-            Node1->next = Node2->next;
-            Node2->next = temp;
-
-            if (Node1->next != NULL)
-                Node1->next->prev = Node1;
-            if (Node2->next != NULL)
-                Node2->next->prev = Node2;
-
-            temp = Node1->prev;
-            Node1->prev = Node2->prev;
-            Node2->prev = temp;
-
-            if (Node1->prev != NULL)
-                Node1->prev->next = Node1;
-            if (Node2->prev != NULL)
-                Node2->prev->next = Node2;
-
-            return;
+            swappingTheNodes(Node1, Node2);
         }
 
     // Returns the val at the specified index in the list.
@@ -598,20 +782,20 @@ namespace reda{
             return m_Tail->val;
         }
 
-        //// REFACTOR FOR ITERATORS
-    //// Returns a pointer pointing to the beginning of the list.
-    //    inline nodePtr begin() const 
-    //    {
-    //        if(m_Head) return m_Head;
-    //        return nullptr;
-    //    }
 
-    //// Returns a pointer pointing to the end of the list.
-    //    inline nodePtr end() const 
-    //    {
-    //        if(m_Tail) return m_Tail;
-    //        return nullptr;
-    //    }
+    // Returns a pointer pointing to the beginning of the list.
+        inline Iterator begin() const 
+        {
+            if (m_Head) return Iterator(m_Head);
+            return nullptr;
+        }
+
+    // Returns a pointer pointing to the end of the list.
+        inline Iterator end() const
+        {
+            if(m_Tail) return Iterator(m_Tail->next);
+            return nullptr;
+        }
 
     // Destructor
         ~LinkedList()
@@ -636,31 +820,6 @@ namespace reda{
 #endif
 
     private:
-        using nodePtr = Node<T>*;
-    
-        std::string m_Name;
-    
-        nodePtr m_Head;
-        nodePtr m_Curr;
-        nodePtr m_Tail;
-    
-        size_t m_Size;
-    
-#if USE_Q
-        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one call that allocates
-                                              // a certain number of nodes and adds them to the queue, then we can pop from
-                                              // the queue and use the popped new nodes in the list
-#endif
-    
-        bool m_FirstElement;
-    
-        struct doubleNodes
-        {
-            nodePtr first;
-            nodePtr second;
-        };
-
-    private:
     // Allocates a nodeCount number of empty nodes and stores them in a Deque ready for popping and use.
         void AllocateNodes(size_t nodeCount)
         {
@@ -675,7 +834,8 @@ namespace reda{
             nodePtr left = m_Head, right = m_Head;
             int count = 1;
 
-            while (m_Curr) {
+            while (m_Curr)
+            {
                 if (count < k) left = left->next;
                 else if (count > k) right = right->next;
 
@@ -686,6 +846,63 @@ namespace reda{
             return { left, right };
         }
 
+    // Helper function for the swapNodes function.
+        doubleNodes findNodes(int left, int right)
+        {
+            m_Curr = m_Head;
+            nodePtr leftNode = m_Head, rightNode = m_Head;
+            int l = 0, r = 0;
+
+            while (m_Curr)
+            {
+                if (l != left) {
+                    leftNode = leftNode->next;
+                    l++;
+                }
+                if (r != right) {
+                    rightNode = rightNode->next;
+                    r++;
+                }
+
+                m_Curr = m_Curr->next;
+            }
+
+            return { leftNode, rightNode };
+        }
+
+    // Helper function for both swapping functions
+        void swappingTheNodes(nodePtr& Node1, nodePtr& Node2)
+        {
+            if (Node1 == m_Head)
+                m_Head = Node2;
+            else if (Node2 == m_Head)
+                m_Head = Node1;
+            if (Node1 == m_Tail)
+                m_Tail = Node2;
+            else if (Node2 == m_Tail)
+                m_Tail = Node1;
+
+            // Swapping Node1 and Node2
+            nodePtr temp;
+            temp = Node1->next;
+            Node1->next = Node2->next;
+            Node2->next = temp;
+
+            if (Node1->next != NULL)
+                Node1->next->prev = Node1;
+            if (Node2->next != NULL)
+                Node2->next->prev = Node2;
+
+            temp = Node1->prev;
+            Node1->prev = Node2->prev;
+            Node2->prev = temp;
+
+            if (Node1->prev != NULL)
+                Node1->prev->next = Node1;
+            if (Node2->prev != NULL)
+                Node2->prev->next = Node2;
+        }
+
     // This functions just like the public clear function however it also deletes the memory of each node after 
     // destructing the T val in it, this is for the destructor only.
         void shutDown()
@@ -694,9 +911,12 @@ namespace reda{
 
             for (size_t i = 0; i < m_Size; i++) {
                 nodePtr temp = m_Curr->next;
-                m_Curr->val.~T();
-                m_Curr->next = nullptr;
-                m_Curr->prev = nullptr;
+
+                //m_Curr->val.~T();
+                //m_Curr->next = nullptr;
+                //m_Curr->prev = nullptr;
+                delete m_Curr;
+
                 m_Curr = temp;
             }
 
@@ -704,10 +924,12 @@ namespace reda{
 
             while (!m_AvailableNodes.empty())
             {
+#if DEBUG
                 std::cout << "Deleting nodes in Queue\n";
+#endif
 
                 m_Curr = m_AvailableNodes.front();
-                m_Curr->val.~T();
+                delete m_Curr;
                 m_AvailableNodes.pop_front();
             }
         }
