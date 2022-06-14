@@ -7,19 +7,21 @@
  * and stores it.
  * 
  * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
- * Create emplace front function, emplace (in middle) function. Create iterators.
+ * Create iterators.
  * Make overloads for the erase and insert function that use iterators instead of temporary indexing.
  * Make overload for the swap function that can swap any two specified nodes in the list, preferanly specified using Iterator.
- * Make it so that it is allowed to popBack or front when m_Size == 1 and getting an empty list.
+ * Create Copy and Move constructors and assignment operator for the LinkedList itself so that it is copyable and movable.
  * Make comments look better by using comment highlighting.
+ * Fix insert and emplace functions to handle the case of index == 0.
  */
 
 #include <iostream>
 #include <deque>
 
+#define USE_Q 1
+
 #ifdef DEBUG
 
-#define USE_Q 1
 #define ASSERT(x) { if(!(x)) { std::cout << "Cannot " __FUNCTION__ << std::endl; __debugbreak(); } }
 
 #else
@@ -71,22 +73,6 @@ namespace reda{
             m_FirstElement = true;
             AllocateNodes(5);
         }
-
-    // This is temporary just to access and print things to the console to ease the debugging before implementing [] operator
-#if DEBUG
-        const T& getAt(int index)
-        {
-            ASSERT(index <= m_Size - 1);
-
-            int i = 0;
-            m_Curr = m_Head;
-            while (i < index) {
-                m_Curr = m_Curr->next;
-                i++;
-            }
-            return m_Curr->val;
-        }
-#endif
 
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
         void push_back(const T& val)
@@ -180,6 +166,52 @@ namespace reda{
             return;
         }
 
+    // Append lvalue new node to the beginning of the list.
+        void push_front(const T& val)
+        {
+            ASSERT(m_Head);
+
+            if (m_AvailableNodes.size() == 0)
+                AllocateNodes(5);
+            
+#if USE_Q
+            nodePtr newNode = m_AvailableNodes.front();
+            m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
+            new((void*)& newNode->val) T(val); // Copies the value
+
+            m_Head->prev = newNode;
+            newNode->next = m_Head;
+            m_Head = m_Head->prev;
+
+            m_Size++;
+        }
+
+    // Append rvalue new node to the beginning of the list.
+        void push_front(T&& val) 
+        {
+            ASSERT(m_Head);
+
+            if (m_AvailableNodes.size() == 0)
+                AllocateNodes(5);
+
+#if USE_Q
+            nodePtr newNode = m_AvailableNodes.front();
+            m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
+            new((void*)&newNode->val)  T(std::move(val)); // Moves the value
+
+            m_Head->prev = newNode;
+            newNode->next = m_Head;
+            m_Head = m_Head->prev;
+
+            m_Size++;
+        }
+
         // Adds a new node to the beginning of the list, however it creates the value object in place of its memory directly 
         // and no moving or copying is needed.
         template<typename... Args>
@@ -213,95 +245,18 @@ namespace reda{
             return;
         }
 
-        // Need to make it find the position that is specified and then insert in.
-
-        // Adds a new node to the specified position in the list, however it creates the value object in place of its memory 
-        // directly and no moving or copying is needed.
-        //template<typename... Args>
-        //void emplace(Args&&... args)
-        //{
-        //    if (m_AvailableNodes.size() == 0)
-        //        AllocateNodes(5);
-
-        //    #if USE_Q
-        //    nodePtr newNode = m_AvailableNodes.front();
-        //    m_AvailableNodes.pop_front();
-        //    #else
-        //    nodePtr newNode = new Node<T>();
-        //    #endif
-
-        //    new((void*)&newNode->val) T(std::forward<Args>(args)...);
-
-        //    if (m_FirstElement) {
-        //        m_Head = newNode;
-        //        m_Tail = newNode;
-        //        m_Size++;
-        //        m_FirstElement = false;
-        //        return;
-        //    }
-
-        //    m_Head->prev = newNode;
-        //    newNode->next = m_Head;
-
-        //    m_Head = m_Head->prev;
-        //    m_Size++;
-        //    return;
-        //}
-
-    // Append lvalue new node to the beginning of the list.
-        void push_front(const T& val)
-        {
-            ASSERT(m_Head);
-
-            if (m_AvailableNodes.size() == 0)
-                AllocateNodes(5);
-            
-#if USE_Q
-            nodePtr newNode = m_AvailableNodes.front();
-            m_AvailableNodes.pop_front();
-#else
-            nodePtr newNode = new Node<T>();
-#endif
-            new((void*)& newNode->val) T(val); // Copies the value
-
-            m_Head->prev = newNode;
-            newNode->next = m_Head;
-            m_Head = m_Head->prev;
-            m_Size++;
-        }
-
-    // Append rvalue new node to the beginning of the list.
-        void push_front(T&& val) 
-        {
-            ASSERT(m_Head);
-
-            if (m_AvailableNodes.size() == 0)
-                AllocateNodes(5);
-
-#if USE_Q
-            nodePtr newNode = m_AvailableNodes.front();
-            m_AvailableNodes.pop_front();
-#else
-            nodePtr newNode = new Node<T>();
-#endif
-            new((void*)&newNode->val)  T(std::move(val)); // Moves the value
-
-            m_Head->prev = newNode;
-            newNode->next = m_Head;
-            m_Head = m_Head->prev;
-            m_Size++;
-        }
-
     // Inserts lvalue element in the list at the specified position. Create Iterator overload
-        void insert(const T& val, int index)
+        void insert(unsigned int index, const T& val)
         {
-            m_Curr = m_Head;
-            int i = 0;
+            if (index == m_Size)
+                push_back(val);
 
-            while (i < index) {
+            m_Curr = m_Head;
+
+            for(unsigned int i = 0; i < index; i++)
                 m_Curr = m_Curr->next;
-                i++;
-            } // After exiting the loop i will equal whatever the index is and m_Curr will be on the node of index (index)
+
+            // After the above loop exits i will equal the index provided
          
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
@@ -314,23 +269,28 @@ namespace reda{
 #endif
             new((void*)&newNode->val) T(val); // Copies the value
 
+            // Here for the patching, m_Curr is at the node that will be pushed forward one position
+
             newNode->prev = m_Curr->prev;
             m_Curr->prev->next = newNode;
             m_Curr->prev = newNode;
             newNode->next = m_Curr;
+
             m_Size++;
         }
 
     // Inserts rvalue element in the list at the specified position. Create Iterator overload
-        void insert(T&& val, int index) 
+        void insert(unsigned int index, T&& val)
         {
-            m_Curr = m_Head;
-            int i = 0;
+            if (index == m_Size)
+                push_back((T&&)val);
 
-            while (i < index) {
+            m_Curr = m_Head;
+
+            for (unsigned int i = 0; i < index; i++)
                 m_Curr = m_Curr->next;
-                i++;
-            } // After exiting the loop i will equal whatever the index is and m_Curr will be on the node of index (index)
+
+            // After the above loop exits i will equal the index provided
 
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
@@ -343,10 +303,50 @@ namespace reda{
 #endif
             new((void*)&newNode->val) T(std::move(val)); // Moves the value
 
+            // Here for the patching, m_Curr is at the node that will be pushed forward one position
+
             newNode->prev = m_Curr->prev;
             m_Curr->prev->next = newNode;
             m_Curr->prev = newNode;
             newNode->next = m_Curr;
+
+            m_Size++;
+        }
+
+        // Adds a new node to the specified position in the list, however it creates the value object in place of its memory 
+        // directly and no moving or copying is needed.
+        template<typename... Args>
+        void emplace(unsigned int index, Args&&... args)
+        {
+            if (index == m_Size)
+                emplace_back(args...);
+
+            m_Curr = m_Head;
+
+            for (unsigned int i = 0; i < index; i++)
+                m_Curr = m_Curr->next;
+
+            // After the above loop exits i will equal the index provided
+
+            if (m_AvailableNodes.size() == 0)
+                AllocateNodes(5);
+
+#if USE_Q
+            nodePtr newNode = m_AvailableNodes.front();
+            m_AvailableNodes.pop_front();
+#else
+            nodePtr newNode = new Node<T>();
+#endif
+
+            new((void*)&newNode->val) T(std::forward<Args>(args)...); // Create the val in-place
+
+            // Here for the patching, m_Curr is at the node that will be pushed forward one position
+
+            newNode->prev = m_Curr->prev;
+            m_Curr->prev->next = newNode;
+            m_Curr->prev = newNode;
+            newNode->next = m_Curr;
+
             m_Size++;
         }
 
@@ -355,6 +355,19 @@ namespace reda{
         {
             if (m_Size > 0)
             {
+                if (m_Size == 1)
+                {
+                    m_FirstElement = true;
+
+                    m_Head = nullptr;
+                    m_Curr = nullptr;
+
+                    delete m_Tail;
+
+                    m_Size--;
+                    return;
+                }
+
                 m_Tail = m_Tail->prev; // Rechanging the Tail pointer position so that it doesnt get deleted in the hollowing
 
                 m_Tail->next->val.~T();                 // Here we create a hollow object
@@ -374,6 +387,19 @@ namespace reda{
             
             if (m_Size > 0)
             {
+                if (m_Size == 1)
+                {
+                    m_FirstElement = true;
+
+                    m_Tail = nullptr;
+                    m_Curr = nullptr;
+
+                    delete m_Head;
+
+                    m_Size--;
+                    return;
+                }
+
                 m_Head = m_Head->next; // Rechanging the Head pointer position so that it doesnt get deleted in the hollowing
                 
                 m_Head->prev->val.~T();
@@ -392,13 +418,11 @@ namespace reda{
             m_Curr = m_Head;
             
             if (index == 0) {
-                ASSERT(m_Size > 1);
                 pop_front();
                 return;
             }
 
             else if (index == m_Size - 1) {
-                ASSERT(m_Size > 1);
                 pop_back();
                 return;
             }
@@ -427,9 +451,10 @@ namespace reda{
             for (size_t i = 0; i < m_Size; i++)
             {
                 nodePtr temp = m_Curr->next;
-                m_Curr->val.~T();
-                m_Curr->next = nullptr;
-                m_Curr->prev = nullptr;
+                //m_Curr->val.~T();
+                //m_Curr->next = nullptr;
+                //m_Curr->prev = nullptr;
+                delete m_Curr;
                 m_Curr = temp;
             }
 
@@ -441,30 +466,35 @@ namespace reda{
 
     // Removes all instances of passed value found in list. If T is a pointer to memory, its memory is not 
     // destroyed, that has to be done manually.
-        //void remove(const T& data){
-        //    curr = m_Head;
-        //    
-        //    while(curr){
-        //        if(curr->val == data and curr == m_Head){
-        //            m_Head = m_Head->next;
-        //            curr->next->prev.reset();
-        //            length--;
-        //        }
-        //        else if(curr->val == data and curr == m_Tail){
-        //            m_Tail = m_Tail->prev;
-        //            curr->prev->next.reset();
-        //            curr->prev.reset();
-        //            length--;
-        //        }
-        //        else if(curr->val == data){
-        //            nodePtr temp = curr->prev;
-        //            temp->next = curr->next;
-        //            curr->next->prev = temp;
-        //            length--;
-        //        }
-        //        curr = curr->next;
-        //    }
-        //}
+        void remove(const T& data){
+            m_Curr = m_Head;
+            
+            while(m_Curr){
+                if (m_Curr->val == data and m_Curr == m_Head) {
+                    m_Curr = m_Curr->next;
+                    pop_front();
+
+                    continue;
+                }
+
+                else if(m_Curr->val == data and m_Curr == m_Tail)
+                    pop_back();
+
+                else if(m_Curr->val == data){
+                    nodePtr delPtr = m_Curr;
+                    m_Curr->prev->next = m_Curr->next;
+                    m_Curr->next->prev = m_Curr->prev;
+
+                    m_Curr = m_Curr->next;
+                    delete delPtr;
+
+                    m_Size--;
+                    continue;
+                }
+
+                m_Curr = m_Curr->next;
+            }
+        }
  
     // Reverses the list.
         void reverseList()
@@ -589,6 +619,22 @@ namespace reda{
             shutDown();
         }
 
+    // This is temporary just to access and print things to the console to ease the debugging before implementing [] operator
+#if DEBUG
+        const T& getAt(int index)
+        {
+            ASSERT(index <= m_Size - 1);
+
+            int i = 0;
+            m_Curr = m_Head;
+            while (i < index) {
+                m_Curr = m_Curr->next;
+                i++;
+            }
+            return m_Curr->val;
+        }
+#endif
+
     private:
         using nodePtr = Node<T>*;
     
@@ -600,9 +646,11 @@ namespace reda{
     
         size_t m_Size;
     
-        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one     callthatallocate 
-                                              // a certain number of nodes and adds to the queue, then we can pop   th 
-                                              // queue and use the nodes to link to the list.
+#if USE_Q
+        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one call that allocates
+                                              // a certain number of nodes and adds them to the queue, then we can pop from
+                                              // the queue and use the popped new nodes in the list
+#endif
     
         bool m_FirstElement;
     

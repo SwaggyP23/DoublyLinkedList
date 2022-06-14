@@ -104,44 +104,62 @@ int main()
 		Point pnt2("two", 3, 4);
 		Point pnt3("three", 5, 6);
 		Point pnt4("four", 7, 8);
-		//temp.push_back({ 5, 5 });
-		//temp.push_back({ 6, 8 });
-		//temp.push_back({ 4, 2 });
-		temp.push_back(pnt1);
+		temp.push_back(pnt2);
 		temp.push_back(pnt2);
 		temp.push_back(pnt3);
-		//temp.emplace_back("emplaced 1", 9, 9);
-		//temp.emplace_back("emplaced 2", 8, 8);
-		//temp.emplace_back(5, 6);
+		temp.push_back(pnt4);
 		display(temp);
-		temp.insert({ "Temporary node", 15, 15}, 2);
+		temp.emplace(2, "two", 3, 4);
+		temp.insert(4, pnt2);
+		temp.insert(5, pnt2);
 		display(temp);
-		std::cout << "Emplacing front" << std::endl;
-		temp.emplace_front("Emplaced Front", 20, 20);
+		temp.remove(pnt2);
 		display(temp);
-		std::cout << "Reversing List" << std::endl;
-		temp.reverseList();
-		display(temp);
-		std::cout << "Swapping kth nodes" << std::endl;
-		temp.swapKthNodes(2);
-		display(temp);
-		std::cout << "Clearing and popping" << std::endl;
+		std::cout << "Popping and clearing" << std::endl;
+		//temp.emplace_back("just to delete", 555, 555);
 		temp.pop_back();
+		temp.pop_front();
 		temp.clear();
 		display(temp);
 	}
 
 	//{
 	//	reda::LinkedList<Point> temp("Reda");
-	//	Point pnt1(1, 2);
-	//	Point pnt2(3, 4);
-	//	Point pnt3(5, 6);
+	//	Point pnt1("one", 1, 2);
+	//	Point pnt2("two", 3, 4);
+	//	Point pnt3("three", 5, 6);
+	//	Point pnt4("four", 7, 8);
 	//	//temp.push_back({ 5, 5 });
 	//	//temp.push_back({ 6, 8 });
 	//	//temp.push_back({ 4, 2 });
-	//	temp.push_back((Point&&)pnt1);
-	//	temp.push_back((Point&&)pnt2);
-	//	temp.push_back((Point&&)pnt3); // These 3 are equivalent to the 3 above them in that they are both moved values
+	//	temp.push_back(pnt1);
+	//	temp.push_back(pnt2);
+	//	temp.push_back(pnt3);
+	//	//temp.emplace_back("emplaced 1", 9, 9);
+	//	//temp.emplace_back("emplaced 2", 8, 8);
+	//	//temp.emplace_back(5, 6);
+	//	display(temp);
+	//	temp.insert(2, { "Temporary node", 15, 15 });
+	//	display(temp);
+	//	std::cout << "Emplacing front" << std::endl;
+	//	temp.emplace_front("Emplaced Front", 20, 20);
+	//	display(temp);
+	//	std::cout << "Reversing List" << std::endl;
+	//	temp.reverseList();
+	//	display(temp);
+	//	std::cout << "Emplacing in mid" << std::endl;
+	//	temp.insert(2, pnt1);
+	//	display(temp);
+	//	std::cout << "Testing remove" << std::endl;
+	//	temp.remove(pnt1);
+	//	display(temp);
+	//	std::cout << "Swapping kth nodes" << std::endl;
+	//	temp.swapKthNodes(2);
+	//	display(temp);
+	//	std::cout << "Clearing and popping" << std::endl;
+	//	temp.pop_back();
+	//	temp.clear();
+	//	display(temp);
 	//}
 
 	//{
