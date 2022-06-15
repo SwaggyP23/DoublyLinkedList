@@ -7,6 +7,8 @@
  * and stores it.
  * 
  * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
+ * Provide support for initializer list declaration. Example: reda::LinkedList<Type> name{...};
+ * Create constant Iterators. (Also reverse Iterators if possible)
  * Make comments look better by using comment highlighting.
  */
 
@@ -247,9 +249,9 @@ namespace reda{
         size_t m_Size;
 
 #if USE_Q
-        std::deque<nodePtr> m_AvailableNodes; // So this is used in a way that we can issue one call that allocates
-                                              // a certain number of nodes and adds them to the queue, then we can pop from
-                                              // the queue and use the popped new nodes in the list
+        std::deque<nodePtr> m_AvailableNodes;
+        // So this is used in a way that we can issue one call that allocates a certain number of nodes and adds them to the
+        // queue, then we can pop from the queue and use the popped new nodes in the list.
 #endif
 
         bool m_FirstElement;
@@ -275,9 +277,9 @@ namespace reda{
             
         }
         
-        // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
-        // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
-        // m_AvailableNodes is empty.
+    // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
+    // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
+    // m_AvailableNodes is empty.
         LinkedList(unsigned int size) 
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
         {
@@ -286,7 +288,7 @@ namespace reda{
             AllocateNodes(size);
         }
 
-        // Here instead of initiazlizing the pointers, we need to copy and allocate new nodes
+    // Here instead of initiazlizing the pointers, we need to copy and allocate new nodes
         LinkedList(const LinkedList& other) // Copy constructor
         {
             m_FirstElement = true;
@@ -319,6 +321,9 @@ namespace reda{
             return *this;
         }
 
+    // For moving all the object we dont really need to allocate new nodes and delete the old ones since they are just
+    // all pointers, therefore we can only transfer the ownership to the new List being constructed, and nullifying 
+    // all the pointers in the old list.
         LinkedList(LinkedList&& other) noexcept // Move constructor
             : m_Head(other.m_Head), m_Curr(other.m_Curr), m_Tail(other.m_Tail), m_Size(other.m_Size),
                 m_FirstElement(other.m_FirstElement)
