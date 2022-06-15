@@ -3,13 +3,11 @@
 /*
  * SO, the basic way this stucture works is that when an object is first constructed it calls an allocate functions that 
  * constructs and store a certain amount of hollow nodes in a Dequeue, and whenever a push or insert function is called, one 
- * node is popped from the queue and is connected to the node, when the queue is empty is reallocates another amount of nodes
+ * node is popped from the queue and is connected to the node, when the queue is empty it reallocates another amount of nodes
  * and stores it.
  * 
  * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
- * Create Copy and Move constructors and assignment operator for the LinkedList itself so that it is copyable and movable.
  * Make comments look better by using comment highlighting.
- * Fix insert and emplace functions to handle the case of index == 0.
  */
 
 #include <iostream>
@@ -162,7 +160,7 @@ namespace reda{
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////// LIST
+    /////////// NODE
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename T>
@@ -170,15 +168,32 @@ namespace reda{
         T val;
         Node* next;
         Node* prev;
-        Node() : next(nullptr), prev(nullptr) {}
+        Node() 
+            : next(nullptr), prev(nullptr) {}
 
-        Node(const T& val) : val(val), next(nullptr), prev(nullptr) {}
+        Node(const T& val) 
+            : val(val), next(nullptr), prev(nullptr) {}
 
-        Node(const T& val, Node* next, Node* prev) : val(val), next(next), prev(prev) {}
+        Node(const T& val, Node* next, Node* prev) 
+            : val(val), next(next), prev(prev) {}
 
-        Node(T&& val) noexcept : val((T&&)val), next(nullptr), prev(nullptr) {}
+        Node(T&& val) 
+            : val((T&&)val), next(nullptr), prev(nullptr) {}
 
-        ~Node() {
+        Node(const Node& other) // Copy constructor
+            : val(other.val), next(other.next), prev(other.prev) {}
+
+        Node(Node&& other)      // Move constructor
+            : next(other.next), prev(other.prev)
+        {
+            val = std::move(other.val);
+
+            other.next = nullptr;
+            other.prev = nullptr;
+        }
+
+        ~Node()
+        {
 #if DEBUG
             std::cout << "Node being destroyed!" << std::endl;
 #endif
@@ -215,13 +230,15 @@ namespace reda{
         }
     };
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////// LIST
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     template<typename T>
     class LinkedList
     {
     private:
         using nodePtr = Node<T>*;
-
-        std::string m_Name;
 
         nodePtr m_Head;
         nodePtr m_Curr;
@@ -250,20 +267,43 @@ namespace reda{
 
     public:
         LinkedList()
-            : m_Name("List"), m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
+            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
         {
             m_Size = 0;
             m_FirstElement = true;
             AllocateNodes(5);
             
         }
-
-        LinkedList(std::string name) 
-            : m_Name(name), m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
+        
+        // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
+        // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
+        // m_AvailableNodes is empty.
+        LinkedList(unsigned int size) 
+            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
         {
             m_Size = 0;
             m_FirstElement = true;
-            AllocateNodes(5);
+            AllocateNodes(size);
+        }
+
+        LinkedList(const LinkedList& other) // Copy constructor
+            : m_Head(other.m_Head), m_Curr(other.m_Curr), m_Tail(other.m_Tail), m_Size(other.m_Size),
+                m_FirstElement(other.m_FirstElement)
+        {
+            m_AvailableNodes = other.m_AvailableNodes;
+        }
+
+        LinkedList(LinkedList&& other) // Move constructor
+            : m_Head(other.m_Head), m_Curr(other.m_Curr), m_Tail(other.m_Tail), m_Size(other.m_Size),
+                m_FirstElement(other.m_FirstElement)
+        {
+            other.m_Head = nullptr;
+            other.m_Curr = nullptr;
+            other.m_Tail = nullptr;
+            other.m_Size = 0;
+            other.m_FirstElement = false;
+
+            m_AvailableNodes = std::move(other.m_AvailableNodes);
         }
 
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
@@ -379,6 +419,7 @@ namespace reda{
             m_Head = m_Head->prev;
 
             m_Size++;
+            return;
         }
 
     // Append rvalue new node to the beginning of the list.
@@ -402,6 +443,7 @@ namespace reda{
             m_Head = m_Head->prev;
 
             m_Size++;
+            return;
         }
 
         // Adds a new node to the beginning of the list, however it creates the value object in place of its memory directly 
@@ -441,7 +483,15 @@ namespace reda{
         void insert(unsigned int index, const T& val)
         {
             if (index == m_Size)
-                push_back(val);
+            {
+                push_back((T&&)val);
+                return;
+            }
+            else if (index == 0)
+            {
+                push_front((T&&)val);
+                return;
+            }
 
             m_Curr = m_Head;
 
@@ -475,7 +525,15 @@ namespace reda{
         void insert(unsigned int index, T&& val)
         {
             if (index == m_Size)
+            {
                 push_back((T&&)val);
+                return;
+            }
+            else if (index == 0)
+            {
+                push_front((T&&)val);
+                return;
+            }
 
             m_Curr = m_Head;
 
@@ -511,7 +569,15 @@ namespace reda{
         void emplace(unsigned int index, Args&&... args)
         {
             if (index == m_Size)
+            {
                 emplace_back(args...);
+                return;
+            }
+            else if (index == 0)
+            {
+                emplace_front(args...);
+                return;
+            }
 
             m_Curr = m_Head;
 

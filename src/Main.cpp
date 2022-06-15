@@ -124,10 +124,6 @@ int main()
 		std::cout << "Testing swap" << std::endl;
 		temp.swapNodes(0, 3);
 		display(temp);
-		//std::cout << "IT\n";
-		//reda::LinkedList<Point>::Iterator it(temp.begin());
-		//display(temp);
-		//std::cout << *(it += 2) << std::endl;
 		temp.remove(pnt2);
 		temp.pop_front();
 		display(temp);
