@@ -286,14 +286,40 @@ namespace reda{
             AllocateNodes(size);
         }
 
+        // Here instead of initiazlizing the pointers, we need to copy and allocate new nodes
         LinkedList(const LinkedList& other) // Copy constructor
-            : m_Head(other.m_Head), m_Curr(other.m_Curr), m_Tail(other.m_Tail), m_Size(other.m_Size),
-                m_FirstElement(other.m_FirstElement)
         {
-            m_AvailableNodes = other.m_AvailableNodes;
+            m_FirstElement = true;
+            m_Size = 0;
+            AllocateNodes(m_Size);
+
+            Iterator it = other.begin();
+
+            while (it != other.end())
+            {
+                push_back(*it);
+                ++it;
+            }
         }
 
-        LinkedList(LinkedList&& other) // Move constructor
+        LinkedList& operator=(const LinkedList& other) // Copy assignment operator
+        {
+            m_FirstElement = true;
+            m_Size = 0;
+            AllocateNodes(m_Size);
+
+            Iterator it = other.begin();
+
+            while (it != other.end())
+            {
+                push_back(*it);
+                ++it;
+            }
+
+            return *this;
+        }
+
+        LinkedList(LinkedList&& other) noexcept // Move constructor
             : m_Head(other.m_Head), m_Curr(other.m_Curr), m_Tail(other.m_Tail), m_Size(other.m_Size),
                 m_FirstElement(other.m_FirstElement)
         {
@@ -303,7 +329,26 @@ namespace reda{
             other.m_Size = 0;
             other.m_FirstElement = false;
 
-            m_AvailableNodes = std::move(other.m_AvailableNodes);
+            std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+        }
+
+        LinkedList& operator=(LinkedList&& other) noexcept // Move assignment operator
+        {
+            m_Head = other.m_Head;
+            m_Curr = other.m_Curr;
+            m_Tail = other.m_Tail;
+            m_Size = other.m_Size;
+            m_FirstElement = other.m_FirstElement;
+
+            other.m_Head = nullptr;
+            other.m_Curr = nullptr;
+            other.m_Tail = nullptr;
+            other.m_Size = 0;
+            other.m_FirstElement = false;
+
+            std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+
+            return *this;
         }
 
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
@@ -679,7 +724,7 @@ namespace reda{
         }
 
     // Remove a single element from the list identified by index. Create iterator overload
-        void erase(int index)
+        void erase(unsigned int index)
         {
             m_Curr = m_Head;
             
@@ -693,7 +738,7 @@ namespace reda{
                 return;
             }
             
-            int i = 0;
+            unsigned int i = 0;
             while(i < index){
                 m_Curr = m_Curr->next;
                 i++;
@@ -786,7 +831,7 @@ namespace reda{
             m_Tail = temp;
         }
         
-        void swapNodes(int index1, int index2)
+        void swapNodes(unsigned int index1, unsigned int index2)
         {
             doubleNodes dn = findNodes(index1, index2);
 
@@ -797,7 +842,7 @@ namespace reda{
         }
 
     // Swaps the Kth largest element with the Kth smallest element in the list.
-        void swapKthNodes(int k)
+        void swapKthNodes(unsigned int k)
         {
             if(k == 0) return;
 
@@ -871,7 +916,7 @@ namespace reda{
 
     // This is temporary just to access and print things to the console to ease the debugging before implementing [] operator
 #if DEBUG
-        const T& getAt(int index)
+        const T& getAt(unsigned int index)
         {
             ASSERT(index <= m_Size - 1);
 
@@ -894,7 +939,7 @@ namespace reda{
         }
 
     // Helper function for the swapKthNodes function.
-        doubleNodes findKthNodes(int k)
+        doubleNodes findKthNodes(unsigned int k)
         {
             m_Curr = m_Head;
             nodePtr left = m_Head, right = m_Head;
@@ -913,7 +958,7 @@ namespace reda{
         }
 
     // Helper function for the swapNodes function.
-        doubleNodes findNodes(int left, int right)
+        doubleNodes findNodes(unsigned int left, unsigned int right)
         {
             m_Curr = m_Head;
             nodePtr leftNode = m_Head, rightNode = m_Head;
