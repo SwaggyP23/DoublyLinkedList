@@ -1,5 +1,4 @@
 #include <iostream>
-#include <concepts>
 #include "DoublyLinked/DoublyLinked.h"
 
 struct Point {
@@ -10,22 +9,17 @@ struct Point {
 	Point() : x(0), y(0), m_Name("NO_NAME")
 	{
 		m_memoryBlock = new int[5];
-		for (int i = 0; i < 5; i++)
-			m_memoryBlock[i] = 0;
 	}
 
 	Point(const std::string& name, int x, int y) : x(x), y(y), m_Name(name)
 	{
 		m_memoryBlock = new int[5];
-		for (int i = 0; i < 5; i++)
-			m_memoryBlock[i] = 0;
 	}
 
 	Point(const Point& other)
 		: x(other.x), y(other.y), m_Name(other.m_Name)
 	{
 		m_memoryBlock = new int[5];
-		memcpy(m_memoryBlock, other.m_memoryBlock, 5 * sizeof(int));
 
 		std::cout << "Coppied\n";
 	}
@@ -36,7 +30,6 @@ struct Point {
 		y = other.y;
 		m_Name = other.m_Name;
 		m_memoryBlock = new int[5];
-		memcpy(m_memoryBlock, other.m_memoryBlock, 5 * sizeof(int));
 
 		std::cout << "Coppied\n";
 		return *this;
@@ -107,14 +100,24 @@ void display(const reda::LinkedList<Type>& list)
 }
 
 int main()
-{
+{	
 	{
-		reda::LinkedList<Point> list;
-		list.push_back({ "one", 5, 5 });
-		list.push_back({ "two", 6, 6 });
-		list.push_back({ "three", 7, 7 });
-		list.push_back({ "four", 8, 8 });
-		list.push_back({ "five", 9, 9 });
+		reda::LinkedList<Point> list{ { "one", 5, 5 },
+									  { "two", 6, 6 }, 
+									  { "three", 7, 7 },
+									  { "four", 8, 8 },
+									  { "five", 9, 9 } };
+		//list.push_back({ "one", 5, 5 });
+		//list.push_back({ "two", 6, 6 });
+		//list.push_back({ "three", 7, 7 });
+		//list.push_back({ "four", 8, 8 });
+		//list.push_back({ "five", 9, 9 });
+		const reda::LinkedList<Point> constList{ { "one", 5, 5 },
+												 { "two", 6, 6 },
+												 { "three", 7, 7 },
+												 { "four", 8, 8 },
+												 { "five", 9, 9 } };
+		display(constList);
 
 		reda::LinkedList<Point> move(std::move(list));
 		printf("move main\n");

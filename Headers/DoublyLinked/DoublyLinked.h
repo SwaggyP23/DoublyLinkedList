@@ -7,13 +7,13 @@
  * and stores it.
  * 
  * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
- * Provide support for initializer list declaration. Example: reda::LinkedList<Type> name{...};
- * Create constant Iterators. (Also reverse Iterators if possible)
+ * Create constant Iterators.
  * Make comments look better by using comment highlighting.
  */
 
 #include <iostream>
 #include <deque>
+#include <initializer_list>
 
 #define USE_Q 1
 
@@ -151,9 +151,9 @@ namespace reda{
             return m_Ptr; // The pointer here is also the position we are at.
         }
 
-        referenceType operator*()
+        referenceType operator*() const
         {
-            return m_Ptr->val;
+            return this->m_Ptr->val;
         }
 
     private:
@@ -269,30 +269,35 @@ namespace reda{
 
     public:
         LinkedList()
-            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
+            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
-            m_Size = 0;
-            m_FirstElement = true;
             AllocateNodes(5);
-            
         }
         
     // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
     // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
     // m_AvailableNodes is empty.
-        LinkedList(unsigned int size) 
-            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr)
+        LinkedList(unsigned int reserveSize) 
+            : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
-            m_Size = 0;
-            m_FirstElement = true;
-            AllocateNodes(size);
+            AllocateNodes(reserveSize);
+        }
+
+    // This constructors supports braced initializer-list LinkedList initialization.
+        LinkedList(std::initializer_list<T> initList)
+            : m_Size(0), m_FirstElement(true)
+        {
+            AllocateNodes(m_Size);
+
+            for (auto it = initList.begin(); it != initList.end(); ++it)
+                emplace_back(*it);
+            
         }
 
     // Here instead of initiazlizing the pointers, we need to copy and allocate new nodes
         LinkedList(const LinkedList& other) // Copy constructor
+            : m_Size(0), m_FirstElement(true)
         {
-            m_FirstElement = true;
-            m_Size = 0;
             AllocateNodes(m_Size);
 
             Iterator it = other.begin();
@@ -899,19 +904,33 @@ namespace reda{
         }
 
 
-    // Returns a pointer pointing to the beginning of the list.
+    // Returns a read-write iterator pointing to the beginning of the list.
         inline Iterator begin() const 
         {
             if (m_Head) return Iterator(m_Head);
             return nullptr;
         }
 
-    // Returns a pointer pointing to the end of the list.
+    // Returns a read-only iterator pointing to the beginning of the list.
+        //inline const_Iterator cbegin() const
+        //{
+        //    if (m_Head) return const_Iterator(m_Head);
+        //    return nullptr;
+        //}
+
+    // Returns a read-write iterator pointing to one past the end of the list.
         inline Iterator end() const
         {
             if(m_Tail) return Iterator(m_Tail->next);
             return nullptr;
         }
+
+    // Returns a read-only iterator pointing to one past the end of the list.
+        //inline const_Iterator cend() const
+        //{
+        //    if (m_Tail) return const_Iterator(m_Tail->next);
+        //    return nullptr;
+        //}
 
     // Destructor
         ~LinkedList()
