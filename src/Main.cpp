@@ -1,6 +1,6 @@
 #include <iostream>
 
-#define REDA_USE_Q
+#define _LIST_USE_Q
 #include "DoublyLinked/DoublyLinked.h"
 
 struct Point {

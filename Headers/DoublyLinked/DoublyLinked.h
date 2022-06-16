@@ -283,7 +283,7 @@ namespace reda{
 
         size_t m_Size;
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
         std::deque<nodePtr> m_AvailableNodes;
         // So this is used in a way that we can issue one call that allocates a certain number of nodes and adds them to the
         // queue, then we can pop from the queue and use the popped new nodes in the list.
@@ -307,7 +307,7 @@ namespace reda{
         LinkedList()
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             AllocateNodes(5);
 #endif
         }
@@ -315,7 +315,7 @@ namespace reda{
     // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
     // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
     // m_AvailableNodes is empty.
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
         LinkedList(unsigned int reserveSize) 
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
@@ -327,7 +327,7 @@ namespace reda{
         LinkedList(std::initializer_list<T> initList)
             : m_Size(0), m_FirstElement(true)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             AllocateNodes(m_Size);
 #endif
 
@@ -340,7 +340,7 @@ namespace reda{
         LinkedList(const LinkedList& other) // Copy constructor
             : m_Size(0), m_FirstElement(true)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             AllocateNodes(m_Size);
 #endif
 
@@ -358,7 +358,7 @@ namespace reda{
             m_FirstElement = true;
             m_Size = 0;
             
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             AllocateNodes(m_Size);
 #endif
 
@@ -386,7 +386,7 @@ namespace reda{
             other.m_Size = 0;
             other.m_FirstElement = false;
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             m_AvailableNodes = std::move(other.m_AvailableNodes);
             //std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
             // This actually does not work and leads to double freeing problems.
@@ -407,7 +407,7 @@ namespace reda{
             other.m_Size = 0;
             other.m_FirstElement = false;
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             m_AvailableNodes = std::move(other.m_AvailableNodes);
             //std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
             // This actually does not work and leads to double freeing problems.
@@ -419,7 +419,7 @@ namespace reda{
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
         void push_back(const T& val)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -450,7 +450,7 @@ namespace reda{
     // Append rvalue new node to the end of the list
         void push_back(T&& val) 
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -483,7 +483,7 @@ namespace reda{
         template<typename... Args>
         void emplace_back(Args&&... args)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -516,7 +516,7 @@ namespace reda{
         {
             ASSERT(m_Head);
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -541,7 +541,7 @@ namespace reda{
         {
             ASSERT(m_Head);
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -566,7 +566,7 @@ namespace reda{
         template<typename... Args>
         void emplace_front(Args&&... args)
         {
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -615,7 +615,7 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
          
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -658,7 +658,7 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -703,7 +703,7 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
 
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
@@ -1032,7 +1032,7 @@ namespace reda{
 
     private:
     // Allocates a nodeCount number of empty nodes and stores them in a Deque ready for popping and use.
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
         void AllocateNodes(size_t nodeCount)
         {
             for (size_t i = 0; i < nodeCount; i++)
@@ -1134,7 +1134,7 @@ namespace reda{
             }
 
             m_Size = 0;
-#ifdef REDA_USE_Q
+#ifdef _LIST_USE_Q
             while (!m_AvailableNodes.empty())
             {
 #if DEBUG
