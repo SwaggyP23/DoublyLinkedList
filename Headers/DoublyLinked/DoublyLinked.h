@@ -416,6 +416,12 @@ namespace reda{
             return *this;
         }
 
+    // Destructor
+        ~LinkedList()
+        {
+            shutDown();
+        }
+
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
         void push_back(const T& val)
         {
@@ -1006,12 +1012,6 @@ namespace reda{
         {
             if (m_Tail) return const_Iterator(m_Tail->next);
             return const_Iterator(nullptr);
-        }
-
-    // Destructor
-        ~LinkedList()
-        {
-            shutDown();
         }
 
     // This is temporary just to access and print things to the console to ease the debugging before implementing [] operator
