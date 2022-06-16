@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _REDA_LIST_
+#define _REDA_LIST_
 
 /*
  * SO, the basic way this stucture works is that when an object is first constructed it calls an allocate functions that 
@@ -6,16 +8,12 @@
  * node is popped from the queue and is connected to the node, when the queue is empty it reallocates another amount of nodes
  * and stores it.
  * 
- * TO DO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
- * Create constant Iterators.
- * Make comments look better by using comment highlighting.
+ * TODO: Make it that when a pop or erase function is called, the popped node is hollowed and readded to the queue. (FIX IT)
  */
 
 #include <iostream>
 #include <deque>
 #include <initializer_list>
-
-#define USE_Q 1
 
 #ifdef DEBUG
 
@@ -40,111 +38,16 @@ namespace reda{
     // and no asserts have been set up for that
 
     template<typename LinkedList>
-    class ListIterator
+    class BaseIterator
     {
     public:
-        using valueType             = LinkedList::valueType;
-        using pointerType           = valueType*;
-        using referenceType         = valueType&;
-        using it_Ptr                = LinkedList::NodePtr;
-
+        using valueType = typename LinkedList::valueType;
+        using pointerType = valueType*;
+        using referenceType = valueType&;
+        using it_Ptr = LinkedList::NodePtr;
     public:
-        ListIterator(it_Ptr ptr)
+        BaseIterator(it_Ptr ptr)
             : m_Ptr(ptr) {}
-
-        ListIterator& operator++()
-        {
-            m_Ptr = m_Ptr->next;
-            return *this;
-        }
-
-        ListIterator operator++(int)
-        {
-            ListIterator iterator = *this;
-            ++(*this);
-            return iterator;
-        }
-
-        ListIterator& operator--()
-        {
-            m_Ptr = m_Ptr->prev;
-            return *this;
-        }
-
-        ListIterator operator--(int)
-        {
-            ListIterator iterator = *this;
-            --(*this);
-            return iterator;
-        }
-
-        ListIterator operator+(int right)
-        {
-            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
-
-            for (int i = 0; i < right; i++)
-            {
-                ++(*this);
-            }
-
-            return m_Ptr;
-        }
-
-        ListIterator operator-(int right)
-        {
-            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
-
-            for (int i = 0; i < right; i++)
-            {
-                --(*this);
-            }
-
-            return m_Ptr;
-        }
-
-        ListIterator& operator+=(int right)
-        {
-            *this + right;
-
-            return *this;
-        }
-
-        ListIterator& operator-=(int right)
-        {
-            *this - right;
-
-            return *this;
-        }
-
-        bool operator==(const ListIterator& right) const
-        {
-            return m_Ptr == right.m_Ptr;
-        }
-
-        bool operator!=(const ListIterator& right) const
-        {
-            return !(*this == right);
-        }
-
-        bool operator<(const ListIterator& right) const
-        {
-            return m_Ptr < right.m_Ptr;
-        }
-
-        bool operator>(const ListIterator& right) const
-        {
-            m_Ptr > right.m_Ptr;
-        }
-
-        bool operator<=(const ListIterator& right) const
-        {
-            m_Ptr <= right.m_Ptr;
-        }
-
-        bool operator>=(const ListIterator& right) const
-        {
-            m_Ptr >= right.m_Ptr;
-        }
 
         pointerType operator->()
         {
@@ -156,10 +59,142 @@ namespace reda{
             return this->m_Ptr->val;
         }
 
-    private:
+        BaseIterator& operator++()
+        {
+            m_Ptr = m_Ptr->next;
+            return *this;
+        }
+
+        BaseIterator operator++(int)
+        {
+            BaseIterator iterator = *this;
+            ++(*this);
+            return iterator;
+        }
+
+        BaseIterator& operator--()
+        {
+            m_Ptr = m_Ptr->prev;
+            return *this;
+        }
+
+        BaseIterator operator--(int)
+        {
+            BaseIterator iterator = *this;
+            --(*this);
+            return iterator;
+        }
+
+        BaseIterator operator+(int right)
+        {
+            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
+
+            for (int i = 0; i < right; i++)
+            {
+                ++(*this);
+            }
+
+            return m_Ptr;
+        }
+
+        BaseIterator operator-(int right)
+        {
+            // Here we should be asserting in case we go out of bounds but i cant find a general way to do that.
+
+            for (int i = 0; i < right; i++)
+            {
+                --(*this);
+            }
+
+            return m_Ptr;
+        }
+
+        BaseIterator& operator+=(int right)
+        {
+            *this + right;
+
+            return *this;
+        }
+
+        BaseIterator& operator-=(int right)
+        {
+            *this - right;
+
+            return *this;
+        }
+
+        bool operator==(const BaseIterator& right) const
+        {
+            return m_Ptr == right.m_Ptr;
+        }
+
+        bool operator!=(const BaseIterator& right) const
+        {
+            return !(*this == right);
+        }
+
+        bool operator<(const BaseIterator& right) const
+        {
+            return m_Ptr < right.m_Ptr;
+        }
+
+        bool operator>(const BaseIterator& right) const
+        {
+            m_Ptr > right.m_Ptr;
+        }
+
+        bool operator<=(const BaseIterator& right) const
+        {
+            m_Ptr <= right.m_Ptr;
+        }
+
+        bool operator>=(const BaseIterator& right) const
+        {
+            m_Ptr >= right.m_Ptr;
+        }
+
+    protected:
         it_Ptr m_Ptr;
     };
 
+    template<typename LinkedList>
+    class ConstIterator : public  BaseIterator<LinkedList>
+    {
+    public:
+        using valueType = typename LinkedList::valueType;
+        using reference = const valueType&;
+
+        reference operator*() const
+        {
+            return this->m_Ptr->val;
+        }
+
+        ConstIterator& operator++()
+        {
+            this->m_Ptr = this->m_Ptr->next;
+            return *this;
+        }
+
+        ConstIterator operator++(int)
+        {
+            ConstIterator iterator = *this;
+            ++(*this);
+            return iterator;
+        }
+
+        ConstIterator& operator--()
+        {
+            this->m_Ptr = this->m_Ptr->prev;
+            return *this;
+        }
+
+        ConstIterator operator--(int)
+        {
+            ConstIterator iterator = *this;
+            --(*this);
+            return iterator;
+        }
+    };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////// NODE
@@ -171,7 +206,7 @@ namespace reda{
         Node* next;
         Node* prev;
         Node() 
-            : next(nullptr), prev(nullptr) {}
+            : val{}, next(nullptr), prev(nullptr) {}
 
         Node(const T& val) 
             : val(val), next(nullptr), prev(nullptr) {}
@@ -248,7 +283,7 @@ namespace reda{
 
         size_t m_Size;
 
-#if USE_Q
+#ifdef REDA_USE_Q
         std::deque<nodePtr> m_AvailableNodes;
         // So this is used in a way that we can issue one call that allocates a certain number of nodes and adds them to the
         // queue, then we can pop from the queue and use the popped new nodes in the list.
@@ -264,30 +299,37 @@ namespace reda{
 
     public:
         using valueType = T;
-        using Iterator = ListIterator<LinkedList<T>>;
+        using Iterator = BaseIterator<LinkedList<T>>;
+        using const_Iterator = ConstIterator<const LinkedList<T>>;
         using NodePtr = nodePtr;
 
     public:
         LinkedList()
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
+#ifdef REDA_USE_Q
             AllocateNodes(5);
+#endif
         }
         
     // This constructor works like a reserve function in a vector class, it takes a size and allocates at construction 
     // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
     // m_AvailableNodes is empty.
+#ifdef REDA_USE_Q
         LinkedList(unsigned int reserveSize) 
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
             AllocateNodes(reserveSize);
         }
+#endif
 
     // This constructors supports braced initializer-list LinkedList initialization.
         LinkedList(std::initializer_list<T> initList)
             : m_Size(0), m_FirstElement(true)
         {
+#ifdef REDA_USE_Q
             AllocateNodes(m_Size);
+#endif
 
             for (auto it = initList.begin(); it != initList.end(); ++it)
                 emplace_back(*it);
@@ -298,7 +340,9 @@ namespace reda{
         LinkedList(const LinkedList& other) // Copy constructor
             : m_Size(0), m_FirstElement(true)
         {
+#ifdef REDA_USE_Q
             AllocateNodes(m_Size);
+#endif
 
             Iterator it = other.begin();
 
@@ -313,7 +357,10 @@ namespace reda{
         {
             m_FirstElement = true;
             m_Size = 0;
+            
+#ifdef REDA_USE_Q
             AllocateNodes(m_Size);
+#endif
 
             Iterator it = other.begin();
 
@@ -339,7 +386,11 @@ namespace reda{
             other.m_Size = 0;
             other.m_FirstElement = false;
 
-            std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+#ifdef REDA_USE_Q
+            m_AvailableNodes = std::move(other.m_AvailableNodes);
+            //std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+            // This actually does not work and leads to double freeing problems.
+#endif
         }
 
         LinkedList& operator=(LinkedList&& other) noexcept // Move assignment operator
@@ -356,7 +407,11 @@ namespace reda{
             other.m_Size = 0;
             other.m_FirstElement = false;
 
-            std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+#ifdef REDA_USE_Q
+            m_AvailableNodes = std::move(other.m_AvailableNodes);
+            //std::move(other.m_AvailableNodes.begin(), other.m_AvailableNodes.end(), m_AvailableNodes.begin());
+            // This actually does not work and leads to double freeing problems.
+#endif
 
             return *this;
         }
@@ -364,14 +419,16 @@ namespace reda{
     // Append lvalue new node to the end of the list. Works in O(1) since it is appending to the tail directly
         void push_back(const T& val)
         {
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
-#if USE_Q
+
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)&newNode->val) T(val); // Copies the value
 
             if (m_FirstElement) {
@@ -393,15 +450,16 @@ namespace reda{
     // Append rvalue new node to the end of the list
         void push_back(T&& val) 
         {
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)&newNode->val)  T(std::move(val)); // Moves the value
 
             if (m_FirstElement) {
@@ -425,10 +483,10 @@ namespace reda{
         template<typename... Args>
         void emplace_back(Args&&... args)
         {
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
@@ -458,15 +516,16 @@ namespace reda{
         {
             ASSERT(m_Head);
 
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
-            
-#if USE_Q
+
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)& newNode->val) T(val); // Copies the value
 
             m_Head->prev = newNode;
@@ -482,15 +541,16 @@ namespace reda{
         {
             ASSERT(m_Head);
 
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)&newNode->val)  T(std::move(val)); // Moves the value
 
             m_Head->prev = newNode;
@@ -506,10 +566,10 @@ namespace reda{
         template<typename... Args>
         void emplace_front(Args&&... args)
         {
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
@@ -555,15 +615,16 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
          
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)&newNode->val) T(val); // Copies the value
 
             // Here for the patching, m_Curr is at the node that will be pushed forward one position
@@ -597,15 +658,16 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
 
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
             nodePtr newNode = new Node<T>();
 #endif
+
             new((void*)&newNode->val) T(std::move(val)); // Moves the value
 
             // Here for the patching, m_Curr is at the node that will be pushed forward one position
@@ -641,10 +703,10 @@ namespace reda{
 
             // After the above loop exits i will equal the index provided
 
+#ifdef REDA_USE_Q
             if (m_AvailableNodes.size() == 0)
                 AllocateNodes(5);
 
-#if USE_Q
             nodePtr newNode = m_AvailableNodes.front();
             m_AvailableNodes.pop_front();
 #else
@@ -878,6 +940,20 @@ namespace reda{
             return m_Curr->val;
         }
 
+    // Returns the val at the specified index in the list. (const version)
+        const T& operator[](unsigned int index) const
+        {
+            ASSERT(index <= m_Size - 1);
+
+            unsigned int i = 0;
+            nodePtr temporary = m_Head;
+            while (i < index) {
+                temporary = temporary->next;
+                i++;
+            }
+            return temporary->val;
+        }
+
     // Returns true if the List is empty, otherwise false.
         inline bool isEmpty() const
         {
@@ -908,29 +984,29 @@ namespace reda{
         inline Iterator begin() const 
         {
             if (m_Head) return Iterator(m_Head);
-            return nullptr;
+            return Iterator(nullptr);
         }
 
     // Returns a read-only iterator pointing to the beginning of the list.
-        //inline const_Iterator cbegin() const
-        //{
-        //    if (m_Head) return const_Iterator(m_Head);
-        //    return nullptr;
-        //}
+        inline const_Iterator cbegin() const
+        {
+            if (m_Head) return const_Iterator(m_Head);
+            return const_Iterator(nullptr);
+        }
 
     // Returns a read-write iterator pointing to one past the end of the list.
         inline Iterator end() const
         {
             if(m_Tail) return Iterator(m_Tail->next);
-            return nullptr;
+            return Iterator(nullptr);
         }
 
     // Returns a read-only iterator pointing to one past the end of the list.
-        //inline const_Iterator cend() const
-        //{
-        //    if (m_Tail) return const_Iterator(m_Tail->next);
-        //    return nullptr;
-        //}
+        inline const_Iterator cend() const
+        {
+            if (m_Tail) return const_Iterator(m_Tail->next);
+            return const_Iterator(nullptr);
+        }
 
     // Destructor
         ~LinkedList()
@@ -956,11 +1032,13 @@ namespace reda{
 
     private:
     // Allocates a nodeCount number of empty nodes and stores them in a Deque ready for popping and use.
+#ifdef REDA_USE_Q
         void AllocateNodes(size_t nodeCount)
         {
             for (size_t i = 0; i < nodeCount; i++)
                 m_AvailableNodes.push_back(new Node<T>());
         }
+#endif
 
     // Helper function for the swapKthNodes function.
         doubleNodes findKthNodes(unsigned int k)
@@ -1056,7 +1134,7 @@ namespace reda{
             }
 
             m_Size = 0;
-
+#ifdef REDA_USE_Q
             while (!m_AvailableNodes.empty())
             {
 #if DEBUG
@@ -1067,6 +1145,9 @@ namespace reda{
                 delete m_Curr;
                 m_AvailableNodes.pop_front();
             }
+#endif
         }
     };
 }
+
+#endif

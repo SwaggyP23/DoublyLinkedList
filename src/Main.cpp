@@ -1,4 +1,6 @@
 #include <iostream>
+
+#define REDA_USE_Q
 #include "DoublyLinked/DoublyLinked.h"
 
 struct Point {
@@ -82,6 +84,11 @@ struct Point {
 		return x < right.x && y < right.y;
 	}
 
+	bool operator>=(const Point& right) const
+	{
+		return x >= right.x && y >= right.y;
+	}
+
 };
 
 std::ostream& operator<<(std::ostream& stream, const Point& pnt)
@@ -100,10 +107,25 @@ void display(const reda::LinkedList<Type>& list)
 }
 
 int main()
-{	
+{
+	{
+		reda::LinkedList<int> list{ 5, 6, 7, 8, 9, 10 };
+		reda::LinkedList<int> list2(list);
+		new(&list) reda::LinkedList<int>(std::move(list2));
+		list.pop_back();
+		new(&list2) reda::LinkedList<int>(std::move(list));
+		list2.pop_front();
+		new(&list) reda::LinkedList<int>(std::move(list2));
+		list.pop_back();
+		new(&list2) reda::LinkedList<int>(std::move(list));
+		list2.pop_back();
+		list.clear();
+		list2.clear();
+	}
+
 	{
 		reda::LinkedList<Point> list{ { "one", 5, 5 },
-									  { "two", 6, 6 }, 
+									  { "two", 6, 6 },
 									  { "three", 7, 7 },
 									  { "four", 8, 8 },
 									  { "five", 9, 9 } };
@@ -112,12 +134,11 @@ int main()
 		//list.push_back({ "three", 7, 7 });
 		//list.push_back({ "four", 8, 8 });
 		//list.push_back({ "five", 9, 9 });
-		const reda::LinkedList<Point> constList{ { "one", 5, 5 },
-												 { "two", 6, 6 },
-												 { "three", 7, 7 },
-												 { "four", 8, 8 },
-												 { "five", 9, 9 } };
+
+		const reda::LinkedList<int> constList{ 5, 6, 7, 8, 9, 10 };
 		display(constList);
+		reda::LinkedList<int>::const_Iterator it = constList.cbegin();
+		std::cout << *(it + 2) << std::endl;
 
 		reda::LinkedList<Point> move(std::move(list));
 		printf("move main\n");
