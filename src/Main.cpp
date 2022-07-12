@@ -1,7 +1,7 @@
 #include <iostream>
 
-#define _LIST_USE_Q
-#include "DoublyLinked/DoublyLinked.h"
+#define _REDA_LIST_USE_Q
+#include "DoublyLinked.h"
 
 struct Point {
 	int x, y;
@@ -129,11 +129,6 @@ int main()
 									  { "three", 7, 7 },
 									  { "four", 8, 8 },
 									  { "five", 9, 9 } };
-		//list.push_back({ "one", 5, 5 });
-		//list.push_back({ "two", 6, 6 });
-		//list.push_back({ "three", 7, 7 });
-		//list.push_back({ "four", 8, 8 });
-		//list.push_back({ "five", 9, 9 });
 
 		const reda::LinkedList<int> constList{ 5, 6, 7, 8, 9, 10 };
 		display(constList);
