@@ -100,7 +100,7 @@ std::ostream& operator<<(std::ostream& stream, const Point& pnt)
 template<typename Type>
 void display(const reda::LinkedList<Type>& list)
 {
-	for (auto& it : list)
+	for (auto it : list)
 		std::cout << it << std::endl;
 
 	std::cout << "--------------------------------" << std::endl;
@@ -109,7 +109,10 @@ void display(const reda::LinkedList<Type>& list)
 int main()
 {
 	{
-		reda::LinkedList<int> list{ 5, 6, 7, 8, 9, 10 };
+		reda::LinkedList<int> list{ 9, 2, 5, 20, 10, 1 };
+		display(list);
+		list.sortList();
+		display(list);
 		reda::LinkedList<int> list2(list);
 		new(&list) reda::LinkedList<int>(std::move(list2));
 		list.pop_back();

@@ -7,6 +7,10 @@
  * constructs and store a certain amount of hollow nodes in a Dequeue, and whenever a push or insert function is called, one 
  * node is popped from the queue and is connected to the node, when the queue is empty it reallocates another amount of nodes
  * and stores it.
+ * The main reason of even doing this thing is to reduce heap allocation, so that we dont have to allocate memory on the heap everytime
+ * we want to insert a node. Hence, we just allocate a certain amount of nodes at one time and untill the allocated amount is depleted
+ * that is when we allocate again.
+ * The amount of nodes that are allocated is defaulted to 5, however it is possible to change to any other custom amount you want.
  */
 
 #include <iostream>
@@ -885,6 +889,13 @@ namespace reda{
                 m_Curr = m_Curr->next;
             }
         }
+
+    // Returns the head of a newly sorted list in ascending order if the list is of basic types, if not basic the user will need to
+    // overload the comparison operator
+        nodePtr sortList()
+        {
+            return splitNodes(&m_Head);
+        }
  
     // Reverses the list.
         void reverseList()
@@ -1012,7 +1023,7 @@ namespace reda{
             return const_Iterator(nullptr);
         }
 
-    // This is temporary just to access and print things to the console to ease the debugging before implementing [] operator
+    // For debugging
 #ifdef _REDA_DEBUG
         const T& getAt(unsigned int index)
         {
@@ -1144,6 +1155,79 @@ namespace reda{
                 m_AvailableNodes.pop_front();
             }
 #endif
+        }
+
+    // Helper function for merge sorting
+        nodePtr splitNodes(nodePtr* head)
+        {
+            // base case: 0 or 1 node
+            if (!*head || !(*head)->next)
+                return *head;
+
+            // split head into `a` and `b` sublists
+            nodePtr a = *head, b = nullptr;
+            split(*head, &a, &b);
+
+            // recursively sort the sublists
+            splitNodes(&a);
+            splitNodes(&b);
+
+            // merge the two sorted lists
+            *head = merge(a, b);
+
+            m_Curr = *head;
+            while (m_Curr->next)
+                m_Curr = m_Curr->next;
+
+            m_Tail = m_Curr;
+        }
+
+    // Helper function for merge sorting
+        void split(nodePtr head, nodePtr* a, nodePtr* b)
+        {
+            nodePtr slow = head;
+            nodePtr fast = head->next;
+
+            // advance `fast` by two nodes, and advance `slow` by a single node
+            while (fast)
+            {
+                fast = fast->next;
+                if (fast)
+                {
+                    slow = slow->next;
+                    fast = fast->next;
+                }
+            }
+
+            *b = slow->next;
+            slow->next = nullptr;
+        }
+
+    // Helper function for merge sorting
+        nodePtr merge(nodePtr a, nodePtr b)
+        {
+            // base cases
+            if (!a)
+                return b;
+
+            if (!b)
+                return a;
+
+            // pick either `a` or `b`, and recur
+            if (a->val <= b->val)
+            {
+                a->next = merge(a->next, b);
+                a->next->prev = a;
+                a->prev = nullptr;
+                return a;
+            }
+            else
+            {
+                b->next = merge(a, b->next);
+                b->next->prev = b;
+                b->prev = nullptr;
+                return b;
+            }
         }
     };
 }
