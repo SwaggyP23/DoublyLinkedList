@@ -13,12 +13,12 @@
  * The amount of nodes that are allocated is defaulted to 5, however it is possible to change to any other custom amount you want.
  */
 
-#include <iostream>
 #include <deque>
 #include <initializer_list>
 
 #ifdef _REDA_DEBUG
 
+    #include <iostream>
     #define ASSERT(x) { if(!(x)) { std::cout << "Cannot " __FUNCTION__ << std::endl; __debugbreak(); } }
 
 #else
@@ -318,7 +318,7 @@ namespace reda{
     // size number of nodes therefore we wont need to allocate on the heap everytime we push or emplace untill the 
     // m_AvailableNodes is empty.
 #ifdef _REDA_LIST_USE_Q
-        LinkedList(unsigned int reserveSize) 
+        LinkedList(uint32_t reserveSize) 
             : m_Head(nullptr), m_Curr(nullptr), m_Tail(nullptr), m_Size(0), m_FirstElement(true)
         {
             AllocateNodes(reserveSize);
@@ -330,12 +330,36 @@ namespace reda{
             : m_Size(0), m_FirstElement(true)
         {
 #ifdef _REDA_LIST_USE_Q
-            AllocateNodes(m_Size);
+            AllocateNodes(initList.size());
 #endif
 
             for (auto it = initList.begin(); it != initList.end(); ++it)
                 emplace_back(*it);
             
+        }
+
+        LinkedList(Iterator head)
+            : m_Size(0), m_FirstElement(true)
+        {
+#ifdef _REDA_LIST_USE_Q
+            size_t size = 0;
+            Iterator it = head;
+            
+            while (it != nullptr)
+            {
+                size++;
+                it++;
+            }
+
+            AllocateNodes(size + 5); // Allocating extra nodes just to copy the whole list and have a little bit of extra
+#endif            
+
+            // Creating a new list from the head that was given
+            for (uint32_t i = 0; i < size; i++)
+            {
+                emplace_back(*head);
+                ++head;
+            }
         }
 
     // Here instead of initiazlizing the pointers, we need to copy and allocate new nodes
@@ -603,7 +627,7 @@ namespace reda{
         }
 
     // Inserts lvalue element in the list at the specified position. Create Iterator overload
-        void insert(unsigned int index, const T& val)
+        void insert(uint32_t index, const T& val)
         {
             if (index == m_Size)
             {
@@ -618,7 +642,7 @@ namespace reda{
 
             m_Curr = m_Head;
 
-            for(unsigned int i = 0; i < index; i++)
+            for(uint32_t i = 0; i < index; i++)
                 m_Curr = m_Curr->next;
 
             // After the above loop exits i will equal the index provided
@@ -646,7 +670,7 @@ namespace reda{
         }
 
     // Inserts rvalue element in the list at the specified position. Create Iterator overload
-        void insert(unsigned int index, T&& val)
+        void insert(uint32_t index, T&& val)
         {
             if (index == m_Size)
             {
@@ -661,7 +685,7 @@ namespace reda{
 
             m_Curr = m_Head;
 
-            for (unsigned int i = 0; i < index; i++)
+            for (uint32_t i = 0; i < index; i++)
                 m_Curr = m_Curr->next;
 
             // After the above loop exits i will equal the index provided
@@ -691,7 +715,7 @@ namespace reda{
         // Adds a new node to the specified position in the list, however it creates the value object in place of its memory 
         // directly and no moving or copying is needed.
         template<typename... Args>
-        void emplace(unsigned int index, Args&&... args)
+        void emplace(uint32_t index, Args&&... args)
         {
             if (index == m_Size)
             {
@@ -706,7 +730,7 @@ namespace reda{
 
             m_Curr = m_Head;
 
-            for (unsigned int i = 0; i < index; i++)
+            for (uint32_t i = 0; i < index; i++)
                 m_Curr = m_Curr->next;
 
             // After the above loop exits i will equal the index provided
@@ -804,7 +828,7 @@ namespace reda{
         }
 
     // Remove a single element from the list identified by index. Create iterator overload
-        void erase(unsigned int index)
+        void erase(uint32_t index)
         {
             m_Curr = m_Head;
             
@@ -818,7 +842,7 @@ namespace reda{
                 return;
             }
             
-            unsigned int i = 0;
+            uint32_t i = 0;
             while(i < index){
                 m_Curr = m_Curr->next;
                 i++;
@@ -918,7 +942,7 @@ namespace reda{
             m_Tail = temp;
         }
         
-        void swapNodes(unsigned int index1, unsigned int index2)
+        void swapNodes(uint32_t index1, uint32_t index2)
         {
             doubleNodes dn = findNodes(index1, index2);
 
@@ -929,7 +953,7 @@ namespace reda{
         }
 
     // Swaps the Kth largest element with the Kth smallest element in the list.
-        void swapKthNodes(unsigned int k)
+        void swapKthNodes(uint32_t k)
         {
             if(k == 0) return;
 
@@ -942,11 +966,11 @@ namespace reda{
         }
 
     // Returns the val at the specified index in the list.
-        T& operator[](unsigned int index)
+        T& operator[](uint32_t index)
         {
             ASSERT(index <= m_Size - 1);
 
-            unsigned int i = 0;
+            uint32_t i = 0;
             m_Curr = m_Head;
             while (i < index) {
                 m_Curr = m_Curr->next;
@@ -956,11 +980,11 @@ namespace reda{
         }
 
     // Returns the val at the specified index in the list. (const version)
-        const T& operator[](unsigned int index) const
+        const T& operator[](uint32_t index) const
         {
             ASSERT(index <= m_Size - 1);
 
-            unsigned int i = 0;
+            uint32_t i = 0;
             nodePtr temporary = m_Head;
             while (i < index) {
                 temporary = temporary->next;
@@ -1025,7 +1049,7 @@ namespace reda{
 
     // For debugging
 #ifdef _REDA_DEBUG
-        const T& getAt(unsigned int index)
+        const T& getAt(uint32_t index)
         {
             ASSERT(index <= m_Size - 1);
 
@@ -1050,7 +1074,7 @@ namespace reda{
 #endif
 
     // Helper function for the swapKthNodes function.
-        doubleNodes findKthNodes(unsigned int k)
+        doubleNodes findKthNodes(uint32_t k)
         {
             m_Curr = m_Head;
             nodePtr left = m_Head, right = m_Head;
@@ -1069,7 +1093,7 @@ namespace reda{
         }
 
     // Helper function for the swapNodes function.
-        doubleNodes findNodes(unsigned int left, unsigned int right)
+        doubleNodes findNodes(uint32_t left, uint32_t right)
         {
             m_Curr = m_Head;
             nodePtr leftNode = m_Head, rightNode = m_Head;
@@ -1180,6 +1204,8 @@ namespace reda{
                 m_Curr = m_Curr->next;
 
             m_Tail = m_Curr;
+
+            return *head;
         }
 
     // Helper function for merge sorting

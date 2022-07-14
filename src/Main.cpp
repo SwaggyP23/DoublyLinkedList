@@ -113,7 +113,9 @@ int main()
 		display(list);
 		list.sortList();
 		display(list);
-		reda::LinkedList<int> list2(list);
+		reda::LinkedList<int> list2(list.begin());
+		display(list2);
+
 		new(&list) reda::LinkedList<int>(std::move(list2));
 		list.pop_back();
 		new(&list2) reda::LinkedList<int>(std::move(list));
